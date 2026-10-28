@@ -19,10 +19,10 @@
     "phone": "09171234567",
     "profile": {},
     "approvalStatus": "approved",
-    "salt": "fc2a506c23aa04f5daf356fa55226431",
-    "passwordHash": "8a6e4ecac83a6e1c2474323c92392cf238af77bdea66b323de83b8580bc3923d",
+    "salt": "d41b64c76316c21885e8b78a4150e611",
+    "passwordHash": "717d75bd7b6c9819c80dce585fec2df344fbfb9e922f4bf15f46ed6978d6155a",
     "createdAt": "2026-10-27T14:46:57.977Z",
-    "passwordResetAt": "2026-10-28T02:21:12.033Z"
+    "passwordResetAt": "2026-10-28T02:18:52.424Z"
   },
   {
     "id": "9e4f8acd-24e7-4b67-a60f-a8c4563a3569",
@@ -146,10 +146,10 @@
         ]
       }
     },
-    "salt": "b187a04de18ce72cd3b52c1f8d5c30cc",
-    "passwordHash": "5111a3f9817bb65420052eb25f2614297d3da79daaaa5242239a6bea70724c81",
+    "salt": "8c1a9c8df9049bfad490f14b87cd931e",
+    "passwordHash": "9aa386186655b8d663854c9af5c7c98ac40d642cbd3d334173e913f604b768ad",
     "createdAt": "2026-10-27T14:46:58.046Z",
-    "passwordResetAt": "2026-10-28T02:21:12.081Z"
+    "passwordResetAt": "2026-10-28T02:18:52.471Z"
   },
   {
     "id": "769633a0-a283-49b8-8e43-5e1a0e003e87",
@@ -167,9 +167,9 @@
       "vehicleModel": "Honda Click 125",
       "orcrNumber": "TEST-ORCR-001"
     },
-    "salt": "9529973f404b683c46672e955d83f3af",
-    "passwordHash": "5219a1f83b9d05d10cf75fbe6b50f6a757c6a96c0e64c7914e4a9f4cf3d3c952",
+    "salt": "111528eec7ad7ca4ad086a8d0b0d93d1",
+    "passwordHash": "e3c3a8c0a6f0b935fba4053a3e871658b80f2b2571c016c8e32132fd359d42e1",
     "createdAt": "2026-10-27T14:46:58.110Z",
-    "passwordResetAt": "2026-10-28T02:21:12.124Z"
+    "passwordResetAt": "2026-10-28T02:18:52.513Z"
   }
 ]
