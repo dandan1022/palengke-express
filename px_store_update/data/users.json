@@ -1,0 +1,175 @@
+[
+  {
+    "id": "fe8d5a34-4bce-4a1c-bff8-0724315113e9",
+    "role": "admin",
+    "name": "Palengke Express Admin",
+    "email": "admin@palengkeexpress.local",
+    "phone": "",
+    "profile": {},
+    "approvalStatus": "approved",
+    "salt": "53735ba6fa680c0c06159dc32b0f8f7d",
+    "passwordHash": "510ead09c1b80393008b58b66d72ab3203436649a227fddb8388de2a2f0cb75c",
+    "createdAt": "2026-10-27T14:46:57.866Z"
+  },
+  {
+    "id": "3dd5bd16-798d-4494-a9bd-b393561b1ff1",
+    "role": "customer",
+    "name": "Customer Tester",
+    "email": "customer@example.test",
+    "phone": "09171234567",
+    "profile": {},
+    "approvalStatus": "approved",
+    "salt": "fc2a506c23aa04f5daf356fa55226431",
+    "passwordHash": "8a6e4ecac83a6e1c2474323c92392cf238af77bdea66b323de83b8580bc3923d",
+    "createdAt": "2026-10-27T14:46:57.977Z",
+    "passwordResetAt": "2026-10-28T02:21:12.033Z"
+  },
+  {
+    "id": "9e4f8acd-24e7-4b67-a60f-a8c4563a3569",
+    "role": "seller",
+    "name": "Seller Tester",
+    "email": "seller@example.test",
+    "phone": "09181234567",
+    "approvalStatus": "approved",
+    "profile": {
+      "storeName": "Tester Fresh Market Stall",
+      "storeLocation": "Tanauan City Public Market",
+      "registrationType": "DTI",
+      "registrationNumber": "TEST-DTI-001",
+      "tin": "TEST-TIN-001",
+      "businessPermit": "TEST-PERMIT-001",
+      "validIdType": "PhilSys ID",
+      "validIdNumber": "TEST-ID-SELLER-001",
+      "products": [
+        {
+          "id": "9e4f8acd-tomato",
+          "name": "Fresh Tomatoes",
+          "category": "Vegetables",
+          "unit": "1 kg",
+          "price": 90,
+          "emoji": "🍅",
+          "tone": "#fcefeb",
+          "stock": 20,
+          "active": true
+        },
+        {
+          "id": "9e4f8acd-pechay",
+          "name": "Fresh Pechay",
+          "category": "Vegetables",
+          "unit": "1 bundle",
+          "price": 35,
+          "emoji": "🥬",
+          "tone": "#e8f5df",
+          "stock": 23,
+          "active": true
+        },
+        {
+          "id": "9e4f8acd-carrot",
+          "name": "Carrots",
+          "category": "Vegetables",
+          "unit": "1 kg",
+          "price": 100,
+          "emoji": "🥕",
+          "tone": "#fff1df",
+          "stock": 26,
+          "active": true
+        },
+        {
+          "id": "9e4f8acd-eggplant",
+          "name": "Eggplant",
+          "category": "Vegetables",
+          "unit": "1 kg",
+          "price": 85,
+          "emoji": "🍆",
+          "tone": "#eeeaf7",
+          "stock": 29,
+          "active": true
+        },
+        {
+          "id": "9e4f8acd-pork",
+          "name": "Pork Kasim",
+          "category": "Meat",
+          "unit": "1 kg",
+          "price": 330,
+          "emoji": "🥩",
+          "tone": "#faecea",
+          "stock": 32,
+          "active": true
+        },
+        {
+          "id": "9e4f8acd-chicken",
+          "name": "Fresh Chicken",
+          "category": "Meat",
+          "unit": "1 kg",
+          "price": 210,
+          "emoji": "🍗",
+          "tone": "#fff3e5",
+          "stock": 35,
+          "active": true
+        },
+        {
+          "id": "9e4f8acd-tilapia",
+          "name": "Fresh Tilapia",
+          "category": "Fish",
+          "unit": "1 kg",
+          "price": 160,
+          "emoji": "🐟",
+          "tone": "#e6f3fc",
+          "stock": 38,
+          "active": true
+        },
+        {
+          "id": "9e4f8acd-shrimp",
+          "name": "Fresh Shrimp",
+          "category": "Fish",
+          "unit": "500 g",
+          "price": 230,
+          "emoji": "🦐",
+          "tone": "#fff0e9",
+          "stock": 41,
+          "active": true
+        }
+      ],
+      "storeSettings": {
+        "mode": "manual",
+        "manualOpen": true,
+        "openTime": "06:00",
+        "closeTime": "18:00",
+        "days": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      }
+    },
+    "salt": "b187a04de18ce72cd3b52c1f8d5c30cc",
+    "passwordHash": "5111a3f9817bb65420052eb25f2614297d3da79daaaa5242239a6bea70724c81",
+    "createdAt": "2026-10-27T14:46:58.046Z",
+    "passwordResetAt": "2026-10-28T02:21:12.081Z"
+  },
+  {
+    "id": "769633a0-a283-49b8-8e43-5e1a0e003e87",
+    "role": "driver",
+    "name": "Driver Tester",
+    "email": "driver@example.test",
+    "phone": "09191234567",
+    "approvalStatus": "approved",
+    "profile": {
+      "licenseNumber": "TEST-LICENSE-001",
+      "licenseType": "Professional",
+      "licenseExpiry": "2028-12-31",
+      "motorcycleType": "Motorcycle",
+      "plateNumber": "TEST-123",
+      "vehicleModel": "Honda Click 125",
+      "orcrNumber": "TEST-ORCR-001"
+    },
+    "salt": "9529973f404b683c46672e955d83f3af",
+    "passwordHash": "5219a1f83b9d05d10cf75fbe6b50f6a757c6a96c0e64c7914e4a9f4cf3d3c952",
+    "createdAt": "2026-10-27T14:46:58.110Z",
+    "passwordResetAt": "2026-10-28T02:21:12.124Z"
+  }
+]
