@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0e443a">
+  <meta name="description" content="Palengke Express – customer, seller, driver, and admin delivery application for Tanauan City.">
+  <title>Palengke Express | Tanauan Public Market</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAo9TchAkw2e82sEJSsyWtuE4kJwTg4C2y9S0brc=" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjGwZsYfFmJX5A4GZ4pTYDTKP2G8=" crossorigin=""></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="side-rail" aria-label="Application sidebar">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">🛍️</div>
+        <div><div class="brand-name">palengke<span>express</span></div><div class="brand-caption">TANAUAN CITY MARKET</div></div>
+      </div>
+      <div class="rail-label">YOUR EXPERIENCE</div>
+      <div class="role-rail" id="role-rail">
+        <button class="rail-role active" type="button" data-role="customer"><span class="rail-icon">🛒</span><span><strong>Customer</strong><small>Shop fresh essentials</small></span></button>
+        <button class="rail-role" type="button" data-role="seller"><span class="rail-icon">🏪</span><span><strong>Seller</strong><small>Manage new orders</small></span><span class="nav-count hidden" id="seller-count">0</span></button>
+        <button class="rail-role" type="button" data-role="driver"><span class="rail-icon">🛵</span><span><strong>Driver</strong><small>Deliver with ease</small></span><span class="nav-count hidden" id="driver-count">0</span></button>
+        <button class="rail-role" type="button" data-role="admin"><span class="rail-icon">🛡️</span><span><strong>Admin</strong><small>Approve accounts</small></span></button>
+      </div>
+      <div class="rail-bottom"><button class="btn btn-ghost btn-full" type="button" data-logout>↪ Log out</button>
+        <div class="rail-note"><span class="live-dot"></span><strong>Four connected views</strong><p>Open this app in separate tabs or devices to test the entire ordering process.</p></div>
+        <div class="rail-location">📍 Tanauan, Batangas<br><small>Community market delivery demo</small></div>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div class="mobile-brand"><span>🛍️</span> palengke<strong>express</strong></div>
+        <div class="topbar-location"><span class="location-pin">📍</span><span><small>OPERATING IN</small><strong>Tanauan City, Batangas</strong></span></div>
+        <div class="topbar-right"><span class="connection" id="connection"><span class="live-dot"></span> Connecting…</span><span class="avatar" id="role-avatar" title="Current role">C</span></div>
+      </header>
+      <div class="mobile-role-tabs" id="mobile-role-tabs" aria-label="Switch view">
+        <button type="button" data-role="customer" class="active">🛒 Customer</button>
+        <button type="button" data-role="seller">🏪 Seller <span id="mobile-seller-count"></span></button>
+        <button type="button" data-role="driver">🛵 Driver <span id="mobile-driver-count"></span></button>
+        <button type="button" data-role="admin">🛡️ Admin</button>
+      </div>
+      <main id="app-content" class="content" aria-live="polite"><div class="loading-box">Loading your market…</div></main>
+      <footer class="footer"><span>© 2026 Palengke Express • Market-to-home made easier</span><span>Prototype • COD only • No real payments</span></footer>
+    </div>
+  </div>
+  <div id="modal-root"></div>
+  <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
+</body>
+</html>
