@@ -12,6 +12,7 @@ const state = {
   deliveryFee:40, cart:JSON.parse(localStorage.getItem('px-cart') || '{}'),
   customerId:session?.user?.id || '',
   customerName:session?.user?.name || '',
+  accountMenuOpen:false, accountModalOpen:false,
   selectedOrderId:null, modalOpen:false, draftLocation:null, draftName:'', draftAddress:'', draftNotes:'',
   online:false, hasLoaded:false, signature:'', map:null, mapEpoch:0, riderMarker:null, routeCoords:[],
   demoTimer:null, demoOrderId:null, gpsWatchId:null, gpsOrderId:null, gpsEnabled:false, users:[]
@@ -125,7 +126,7 @@ function shopPage(){
   const store=state.stores.find(x=>x.id===state.selectedStoreId);
   const storeProducts=selectedStoreProducts();
   const filtered=storeProducts.filter(p => (state.filter==='All'||p.category===state.filter) && (`${p.name} ${p.category}`).toLowerCase().includes(state.search.toLowerCase()));
-  return `${contentHead('WELCOME TO THE PALENGKE','Choose your seller store.','Every approved seller appears here as a separate store. Choose one to see only that seller’s items.',`<button class="btn btn-ghost" data-section="orders">📦 My orders (${selectedOrders().length})</button>`)}
+  return `${contentHead('WELCOME TO THE PALENGKE','Choose your seller store.','Every approved seller appears here as a separate store. Choose one to see only that seller’s items.',`<button class="btn btn-ghost" data-section="settings">⚙️ Settings</button><button class="btn btn-ghost" data-section="orders">📦 My orders (${selectedOrders().length})</button>`)}
     <section class="shop-hero"><div class="hero-content"><div class="hero-kicker">✨ Approved local sellers</div><h2>Choose a store,<br>then shop its items.</h2><p>${state.stores.length} approved seller ${state.stores.length===1?'store is':'stores are'} currently listed.</p><span class="hero-chip">🛵 Fast delivery · Cash on Delivery</span></div><div class="hero-circle"></div><span class="hero-art" aria-hidden="true">🏪</span></section>
     <div class="section-head"><div><h2>All approved seller stores</h2><p>${state.stores.length} ${state.stores.length===1?'store':'stores'} available to browse</p></div></div>
     ${storeCards()}
@@ -172,8 +173,32 @@ function sellerInventoryPanel(){
 }
 function customerOrdersPage(){
   const group=selectedOrders();
-  return `${contentHead('TRACK YOUR DELIVERY','My orders','Follow every step, from the market stall to your door.',`<button class="btn btn-ghost" data-section="shop">← Back to market</button>`)}
+  return `${contentHead('TRACK YOUR DELIVERY','My orders','Follow every step, from the market stall to your door.',`<button class="btn btn-ghost" data-section="settings">⚙️ Settings</button><button class="btn btn-ghost" data-section="shop">← Back to market</button>`)}
     ${group.length ? `<div class="columns"><div class="panel"><div class="panel-heading"><div><h2>Order history</h2><p class="panel-subtitle">${group.length} placed order(s)</p></div><span class="count-chip">Live updates</span></div><div class="order-list">${group.map(orderTile).join('')}</div></div>${detailPanel(selectedOrder())}</div>` : empty('You haven’t placed an order yet','Add fresh items to your cart to see your order status and tracking here.','🛍️')}`;
+}
+function customerSettingsPage(){
+  const u=authSession?.user||{};
+  const address=u.profile?.deliveryAddress||'';
+  return `${contentHead('CUSTOMER SETTINGS','Account settings','Update your contact information, default delivery address, and password.',`<button class="btn btn-ghost" data-section="shop">← Back to market</button>`)}
+    <div class="seller-commerce-grid">
+      <div class="panel"><div class="panel-heading"><div><h2>Contact & delivery details</h2><p class="panel-subtitle">These details are saved to your customer account.</p></div></div>
+        <form id="customer-profile-form">
+          <div class="field"><label>Full name</label><input value="${esc(u.name||'')}" disabled><small class="inline-note">Your registered name is shown for reference.</small></div>
+          <div class="field-grid two"><div class="field"><label>Email address</label><input type="email" name="email" required value="${esc(u.email||'')}"></div><div class="field"><label>Mobile number</label><input type="tel" name="phone" required maxlength="20" value="${esc(u.phone||'')}"></div></div>
+          <div class="field"><label>Default delivery address</label><textarea name="address" required maxlength="180" placeholder="House no., street, barangay, city">${esc(address)}</textarea></div>
+          <button class="btn btn-primary" type="submit">Save account details</button>
+        </form>
+      </div>
+      <div class="panel"><div class="panel-heading"><div><h2>Change password</h2><p class="panel-subtitle">Enter your current password before choosing a new one.</p></div></div>
+        <form id="customer-password-form">
+          <div class="field"><label>Current password</label><input type="password" name="currentPassword" required autocomplete="current-password"></div>
+          <div class="field"><label>New password</label><input type="password" name="newPassword" minlength="7" required autocomplete="new-password" placeholder="At least 7 characters"></div>
+          <div class="field"><label>Confirm new password</label><input type="password" name="confirmPassword" minlength="7" required autocomplete="new-password"></div>
+          <button class="btn btn-primary" type="submit">Change password</button>
+        </form>
+        <p class="inline-note">For security, your password is never shown in the admin dashboard or Google Sheets.</p>
+      </div>
+    </div>`;
 }
 function sellerPage(){
   const group=state.orders;
@@ -233,7 +258,19 @@ function driverPage(){
       ${group.length ? `<div class="order-list">${group.map(orderTile).join('')}</div>` : empty('No delivery requests yet','When the seller books you for a grocery order, it will arrive here automatically.','🛵')}
     </div>${detailPanel(selectedOrder())}</div>`;
 }
+function syncAuthChrome(){
+  const loggedIn=!!authSession;
+  const roleRail=$('#role-rail');
+  const mobileRoleTabs=$('#mobile-role-tabs');
+  const railLabel=document.querySelector('.rail-label');
+  const railNote=document.querySelector('.rail-note');
+  if(roleRail)roleRail.classList.toggle('hidden',loggedIn);
+  if(mobileRoleTabs)mobileRoleTabs.classList.toggle('hidden',loggedIn);
+  if(railLabel)railLabel.classList.toggle('hidden',loggedIn);
+  if(railNote)railNote.classList.toggle('hidden',loggedIn);
+}
 function updateCounters(){
+  syncAuthChrome();
   const pending=state.orders.filter(o=>o.status==='pending').length;
   const jobs=state.orders.filter(o=>o.status==='awaiting_driver').length;
   const sc=$('#seller-count'), dc=$('#driver-count');
@@ -241,14 +278,17 @@ function updateCounters(){
   if(dc){dc.textContent=jobs;dc.classList.toggle('hidden',!jobs)}
   if($('#mobile-seller-count'))$('#mobile-seller-count').textContent=pending?`(${pending})`:'';
   if($('#mobile-driver-count'))$('#mobile-driver-count').textContent=jobs?`(${jobs})`:'';
-  $('#role-avatar').textContent=state.role[0].toUpperCase();
+  const firstName=(authSession?.user?.name||'').trim().split(/\s+/)[0]||state.role||'User';
+  const avatar=$('#role-avatar');
+  if(avatar){avatar.textContent=firstName.charAt(0).toUpperCase();avatar.title=authSession?.user?.name||'Account';avatar.setAttribute('aria-expanded',state.accountMenuOpen?'true':'false');}
+  const dropdown=$('#account-dropdown');if(dropdown)dropdown.classList.toggle('hidden',!state.accountMenuOpen || !authSession);
   document.querySelectorAll('[data-role]').forEach(el=>el.classList.toggle('active',el.dataset.role===state.role));
 }
 function render(){
   updateCounters();
   destroyMap();
   if(!state.hasLoaded){$('#app-content').innerHTML='<div class="loading-box">Connecting to your market…</div>';return;}
-  const content=state.role==='admin' ? adminPage() : state.role==='customer' ? (state.section==='shop'?shopPage():customerOrdersPage()) : state.role==='seller' ? sellerPage() : driverPage();
+  const content=state.role==='admin' ? adminPage() : state.role==='customer' ? (state.section==='shop'?shopPage():state.section==='settings'?customerSettingsPage():customerOrdersPage()) : state.role==='seller' ? sellerPage() : driverPage();
   $('#app-content').innerHTML=content;
   renderModal();
   const o=selectedOrder();
@@ -287,14 +327,28 @@ function cartModal(){
       <div class="checkout-actions"><button class="btn btn-primary btn-full" type="submit">Place order · ${money(cartSubtotal()+state.deliveryFee)}</button><span class="inline-note">Cash on Delivery only. This is a demonstration and will not charge you.</span></div></form>` : empty('Your basket is empty','Choose a few fresh products to place an order.','🧺')}
   </div></div>`;
 }
+function accountModal(){
+  const u=authSession?.user||{};
+  const p=u.profile||{};
+  const role=u.role||state.role;
+  const details=role==='seller'
+    ? `<div class="detail-row"><span>Store</span><strong>${esc(p.storeName||'—')}</strong></div><div class="detail-row"><span>Location</span><strong>${esc(p.storeLocation||'—')}</strong></div>`
+    : role==='driver'
+      ? `<div class="detail-row"><span>License type</span><strong>${esc(p.licenseType||'—')}</strong></div><div class="detail-row"><span>Vehicle</span><strong>${esc(p.vehicleModel||p.motorcycleType||'—')}</strong></div>`
+      : role==='customer'
+        ? `<div class="detail-row"><span>Delivery address</span><strong>${esc(p.deliveryAddress||'Not set')}</strong></div>`
+        : '';
+  const initial=((u.name||role||'U').trim()[0]||'U').toUpperCase();
+  return `<div class="overlay account-overlay" data-close-account-modal><div class="modal-card account-profile-card" role="dialog" aria-modal="true" aria-label="Account details" onclick="event.stopPropagation()"><div class="modal-header"><div><div class="eyebrow">MY ACCOUNT</div><h2 style="margin-top:5px">Account details</h2></div><button type="button" class="close-btn" data-close-account-modal aria-label="Close account details">×</button></div><div class="account-profile-head"><div class="account-profile-avatar">${initial}</div><div><h3>${esc(u.name||'User')}</h3><p>${esc((role||'user').charAt(0).toUpperCase()+(role||'user').slice(1))}</p></div></div><div class="account-profile-details"><div class="detail-row"><span>Email</span><strong>${esc(u.email||'—')}</strong></div><div class="detail-row"><span>Phone</span><strong>${esc(u.phone||'—')}</strong></div>${details}</div></div></div>`;
+}
 function renderModal(){
-  $('#modal-root').innerHTML=state.modalOpen ? cartModal() : '';
+  $('#modal-root').innerHTML=state.accountModalOpen ? accountModal() : (state.modalOpen ? cartModal() : '');
 }
 function openCart(){
   state.modalOpen=true;
   if(!state.draftLocation)state.draftLocation=state.locations[0];
   if(!state.draftName)state.draftName=state.customerName;
-  if(!state.draftAddress)state.draftAddress=state.draftLocation?.address || '';
+  if(!state.draftAddress)state.draftAddress=authSession?.user?.profile?.deliveryAddress || state.draftLocation?.address || '';
   renderModal();
 }
 function closeCart(){state.modalOpen=false;renderModal();}
@@ -519,7 +573,7 @@ function authMarkup(){
     ${authSession?'<button type="button" class="btn btn-ghost btn-full" data-auth-cancel>← Back to my dashboard</button>':''}
     </div></div>`;
 }
-function renderAuth(){ destroyMap();state.modalOpen=false;$('#modal-root').innerHTML='';$('#app-content').innerHTML=authMarkup(); }
+function renderAuth(){ destroyMap();state.modalOpen=false;syncAuthChrome();$('#modal-root').innerHTML='';$('#app-content').innerHTML=authMarkup(); }
 async function submitAuth(e){
   e.preventDefault();const form=e.target,button=form.querySelector('[type="submit"]');button.disabled=true;
   const payload={role:desiredRole,email:form.elements.namedItem('email').value.trim(),password:form.elements.namedItem('password').value};
@@ -552,7 +606,7 @@ async function submitAuth(e){
 }
 async function logout(){
   if(authSession)try{await api('/api/auth/logout','POST',{});}catch(_){}
-  if(window.pxEvents)window.pxEvents.close();stopGPS();stopDemo();authSession=null;sessionStorage.removeItem('px-session');
+  if(window.pxEvents)window.pxEvents.close();stopGPS();stopDemo();authSession=null;state.accountMenuOpen=false;state.accountModalOpen=false;sessionStorage.removeItem('px-session');
   state.orders=[];state.hasLoaded=false;state.signature='';desiredRole=state.role;authMode='login';renderAuth();
 }
 
@@ -590,6 +644,18 @@ async function placeOrder(event){
 document.addEventListener('click',async event=>{
   const element=event.target.closest('button');if(!element)return;
   if(element.dataset.role){switchRole(element.dataset.role);return;}
+  if(element.hasAttribute('data-account-menu')){state.accountMenuOpen=!state.accountMenuOpen;updateCounters();return;}
+  if(element.dataset.accountAction){
+    const action=element.dataset.accountAction;state.accountMenuOpen=false;
+    if(action==='logout'){logout();return;}
+    if(action==='account'){state.accountModalOpen=true;render();return;}
+    if(action==='settings'){
+      if(state.role==='customer'){state.section='settings';render();return;}
+      if(state.role==='seller'){state.section='seller';render();setTimeout(()=>document.querySelector('#store-settings-form')?.scrollIntoView({behavior:'smooth',block:'start'}),0);return;}
+      toast(state.role==='driver'?'Driver settings are managed from your account profile.':'Admin settings are managed from the admin dashboard.');render();return;
+    }
+  }
+  if(element.hasAttribute('data-close-account-modal')){state.accountModalOpen=false;render();return;}
   if(element.dataset.authMode){authMode=element.dataset.authMode;renderAuth();return;}
   if(element.hasAttribute('data-auth-cancel')){render();return;}
   if(element.hasAttribute('data-logout')){logout();return;}
@@ -676,7 +742,24 @@ async function saveStoreSettings(event){
   event.preventDefault();const f=event.target;const days=[...f.querySelectorAll('input[name="days"]:checked')].map(x=>Number(x.value));const button=f.querySelector('[type="submit"]');button.disabled=true;
   try{await api('/api/seller/store-settings','POST',{mode:f.mode.value,manualOpen:f.manualOpen.checked,openTime:f.openTime.value,closeTime:f.closeTime.value,days});toast('✓ Store hours updated.');}catch(err){toast('⚠ '+err.message);button.disabled=false;}
 }
-document.addEventListener('submit',event=>{if(event.target.id==='checkout-form')placeOrder(event);if(event.target.id==='auth-form')submitAuth(event);if(event.target.id==='add-product-form')addSellerProduct(event);if(event.target.id==='store-settings-form')saveStoreSettings(event);});
+async function saveCustomerProfile(event){
+  event.preventDefault(); const f=event.target,button=f.querySelector('[type="submit"]'); button.disabled=true;
+  try{
+    const result=await api('/api/account/profile','PATCH',{email:f.email.value.trim(),phone:f.phone.value.trim(),address:f.address.value.trim()});
+    authSession.user=result.user; sessionStorage.setItem('px-session',JSON.stringify(authSession)); state.customerName=result.user.name; state.customerId=result.user.id; state.draftAddress=result.user.profile?.deliveryAddress||'';
+    render(); toast('✓ Customer details updated.');
+  }catch(err){toast('⚠ '+err.message);button.disabled=false;}
+}
+async function changeCustomerPassword(event){
+  event.preventDefault(); const f=event.target,button=f.querySelector('[type="submit"]');
+  if(f.newPassword.value!==f.confirmPassword.value){toast('⚠ New passwords do not match.');return;}
+  button.disabled=true;
+  try{await api('/api/account/change-password','POST',{currentPassword:f.currentPassword.value,newPassword:f.newPassword.value});f.reset();toast('✓ Password changed successfully.');}
+  catch(err){toast('⚠ '+err.message);} finally{button.disabled=false;}
+}
+document.addEventListener('click',event=>{if(state.accountMenuOpen && !event.target.closest('.account-menu-wrap')){state.accountMenuOpen=false;updateCounters();}});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){if(state.accountMenuOpen){state.accountMenuOpen=false;updateCounters();}if(state.accountModalOpen){state.accountModalOpen=false;render();}}});
+document.addEventListener('submit',event=>{if(event.target.id==='checkout-form')placeOrder(event);if(event.target.id==='auth-form')submitAuth(event);if(event.target.id==='add-product-form')addSellerProduct(event);if(event.target.id==='store-settings-form')saveStoreSettings(event);if(event.target.id==='customer-profile-form')saveCustomerProfile(event);if(event.target.id==='customer-password-form')changeCustomerPassword(event);});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&state.modalOpen)closeCart();});
 window.addEventListener('beforeunload',()=>{stopDemo();stopGPS();});
 if(authSession){api('/api/auth/me').then(()=>init()).catch(()=>{authSession=null;sessionStorage.removeItem('px-session');renderAuth();});}else renderAuth();

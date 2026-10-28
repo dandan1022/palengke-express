@@ -159,3 +159,8 @@ Each Seller POV now includes:
 - Automatic opening schedule with selected days, opening time, and closing time (Asia/Manila / Philippine time)
 
 A closed store still appears in the Customer POV so buyers can browse it, but checkout is disabled by the server until the store is open. Orders are also validated against that seller's own inventory, and stock is reduced when an order is successfully placed.
+
+## Customer account settings
+Customers now have a **Settings** button in the Customer POV. They can update their email address, mobile number, and default delivery address. They can also change their password after entering the current password. The saved default address is prefilled during checkout.
+
+For security, passwords are stored only as one-way hashes and are not written to Google Sheets.

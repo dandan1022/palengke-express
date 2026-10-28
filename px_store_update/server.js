@@ -74,7 +74,7 @@ function ensureTesterAccounts(){
     }
     // Keep tester credentials predictable for classroom/demo use.
     const salt=crypto.randomBytes(16).toString('hex');
-    account.name=seed.name; account.phone=seed.phone; account.profile=seed.profile;
+    account.name=seed.name; account.phone=seed.phone; account.profile={...(account.profile||{}),...seed.profile};
     account.approvalStatus='approved'; account.salt=salt; account.passwordHash=hashPassword(password,salt);
     account.passwordResetAt=new Date().toISOString(); changed=true;
   }
@@ -246,6 +246,32 @@ function orderResponse(req, res, url) {
     sessions.delete(req.headers.authorization.slice(7)); return respond(res,200,{ok:true});
   }
   if(req.method==='GET' && url.pathname==='/api/auth/me') return respond(res,200,{user:userView(user)});
+
+  if(req.method==='PATCH' && url.pathname==='/api/account/profile') return parseBody(req).then(body=>{
+    if(user.role!=='customer') return error(res,403,'Customer access required.');
+    const email=clean(body.email,160).toLowerCase();
+    const phone=clean(body.phone,20);
+    const address=clean(body.address,180);
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error(res,400,'Enter a valid email address.');
+    if(phone.length<7) return error(res,400,'Enter a valid mobile number.');
+    if(address.length<5) return error(res,400,'Enter your delivery address.');
+    if(users.some(u=>u.id!==user.id && u.email===email)) return error(res,409,'That email is already registered to another account.');
+    user.email=email; user.phone=phone; user.profile=user.profile||{}; user.profile.deliveryAddress=address; user.updatedAt=new Date().toISOString();
+    saveUsers(); sheetEvent('customer_profile_updated',user,{phone,addressUpdated:true}); broadcast();
+    return respond(res,200,{user:userView(user)});
+  }).catch(e=>error(res,400,e.message));
+
+  if(req.method==='POST' && url.pathname==='/api/account/change-password') return parseBody(req).then(body=>{
+    if(user.role!=='customer') return error(res,403,'Customer access required.');
+    const currentPassword=String(body.currentPassword||'');
+    const newPassword=String(body.newPassword||'');
+    const currentHash=hashPassword(currentPassword,user.salt);
+    if(!crypto.timingSafeEqual(Buffer.from(user.passwordHash,'hex'),Buffer.from(currentHash,'hex'))) return error(res,401,'Current password is incorrect.');
+    if(newPassword.length<7 || newPassword.length>128) return error(res,400,'New password must contain at least 7 characters.');
+    const salt=crypto.randomBytes(16).toString('hex'); user.salt=salt; user.passwordHash=hashPassword(newPassword,salt); user.passwordResetAt=new Date().toISOString();
+    saveUsers(); sheetEvent('customer_password_changed',user);
+    return respond(res,200,{ok:true,message:'Password changed successfully.'});
+  }).catch(e=>error(res,400,e.message));
 
   if(req.method==='GET' && url.pathname==='/api/admin/users') {
     if(user.role!=='admin') return error(res,403,'Admin access required.');

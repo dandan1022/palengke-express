@@ -17,12 +17,15 @@
     "name": "Customer Tester",
     "email": "customer@example.test",
     "phone": "09171234567",
-    "profile": {},
+    "profile": {
+      "deliveryAddress": "123 Tester Street, Tanauan City"
+    },
     "approvalStatus": "approved",
-    "salt": "d41b64c76316c21885e8b78a4150e611",
-    "passwordHash": "717d75bd7b6c9819c80dce585fec2df344fbfb9e922f4bf15f46ed6978d6155a",
+    "salt": "6e40e74dc8043c9e4b6e38c19d7f8279",
+    "passwordHash": "2bd0a378d88caadae8822ed07a97d157f14c135d206fb19987c70f5923d30cc3",
     "createdAt": "2026-10-27T14:46:57.977Z",
-    "passwordResetAt": "2026-10-28T02:18:52.424Z"
+    "passwordResetAt": "2026-10-28T03:15:55.406Z",
+    "updatedAt": "2026-10-28T02:54:54.514Z"
   },
   {
     "id": "9e4f8acd-24e7-4b67-a60f-a8c4563a3569",
@@ -146,10 +149,10 @@
         ]
       }
     },
-    "salt": "8c1a9c8df9049bfad490f14b87cd931e",
-    "passwordHash": "9aa386186655b8d663854c9af5c7c98ac40d642cbd3d334173e913f604b768ad",
+    "salt": "0170663a8ff7683c3825f75be876aaa0",
+    "passwordHash": "fe76424c0d1df9210091a5e36f0818e8824b20710eb8f125bbf7000f5f2eab00",
     "createdAt": "2026-10-27T14:46:58.046Z",
-    "passwordResetAt": "2026-10-28T02:18:52.471Z"
+    "passwordResetAt": "2026-10-28T03:15:55.453Z"
   },
   {
     "id": "769633a0-a283-49b8-8e43-5e1a0e003e87",
@@ -167,9 +170,9 @@
       "vehicleModel": "Honda Click 125",
       "orcrNumber": "TEST-ORCR-001"
     },
-    "salt": "111528eec7ad7ca4ad086a8d0b0d93d1",
-    "passwordHash": "e3c3a8c0a6f0b935fba4053a3e871658b80f2b2571c016c8e32132fd359d42e1",
+    "salt": "37caf79f37f5d768dc099aad469349fb",
+    "passwordHash": "6741c20982c9f52473d774e6129c31403bb9ffbcb4089f814f2a63aaac5c4aad",
     "createdAt": "2026-10-27T14:46:58.110Z",
-    "passwordResetAt": "2026-10-28T02:18:52.513Z"
+    "passwordResetAt": "2026-10-28T03:15:55.500Z"
   }
 ]
