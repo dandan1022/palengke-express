@@ -164,3 +164,10 @@ A closed store still appears in the Customer POV so buyers can browse it, but ch
 Customers now have a **Settings** button in the Customer POV. They can update their email address, mobile number, and default delivery address. They can also change their password after entering the current password. The saved default address is prefilled during checkout.
 
 For security, passwords are stored only as one-way hashes and are not written to Google Sheets.
+
+## Clean UI refresh
+- The old dark-green left sidebar was replaced with a white brand/navigation area for a cleaner full-page look.
+- The duplicate left-side Log out button was removed. Logout remains in the profile-circle menu.
+- The duplicate Customer Settings buttons were removed. Settings remains in the profile-circle menu.
+- Approved seller stores are now selected from a compact dropdown instead of large store cards.
+- The selected store's open/closed state, location, owner and item count remain visible before browsing its catalog.

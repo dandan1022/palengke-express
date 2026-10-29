@@ -108,17 +108,17 @@ function driverLocationActions(order){
       ${state.demoTimer && state.demoOrderId===order.id ? '<button class="btn btn-danger btn-small" data-stop-demo>■ Stop simulation</button>' : '<button class="btn btn-ghost btn-small" data-start-demo="'+order.id+'">🧪 Simulate route</button>'}
     </div><p class="inline-note">Real GPS requires location permission and a secure connection (localhost or HTTPS). Simulation moves a test marker along the route; it is clearly labeled for all roles.</p>`;
 }
-function storeCards(){
+function storePicker(){
   if(!state.stores.length) return `<div class="stores-empty">${empty('No approved sellers yet','Approved seller stores will appear here after the admin reviews their accounts.','🏪')}</div>`;
-  return `<div class="store-grid">${state.stores.map(store=>{
-    const active=store.id===state.selectedStoreId;
-    return `<button type="button" class="store-card ${active?'active':''} ${store.isOpen?'':'closed'}" data-store="${esc(store.id)}">
-      <div class="store-card-top"><span class="store-icon">🏪</span><span class="store-status ${store.isOpen?'':'closed'}">● ${store.isOpen?'Open':'Closed'}</span></div>
-      <h3>${esc(store.name)}</h3><p>📍 ${esc(store.location)}</p><small>Seller: ${esc(store.ownerName)} · ${Number(store.productCount||0)} item(s)</small>
-      <small class="store-hours-note">${esc(store.openReason||'')}</small>
-      <span class="store-open-btn">${active?'✓ Selected':'View store →'}</span>
-    </button>`;
-  }).join('')}</div>`;
+  const store=state.stores.find(x=>x.id===state.selectedStoreId)||state.stores[0];
+  return `<div class="store-picker-panel">
+    <div class="store-picker-copy"><span class="store-picker-label">SHOP FROM</span><strong>Choose a seller store</strong><small>${state.stores.length} approved ${state.stores.length===1?'store':'stores'} available</small></div>
+    <div class="store-picker-control">
+      <select id="store-select" aria-label="Choose seller store">${state.stores.map(s=>`<option value="${esc(s.id)}" ${s.id===state.selectedStoreId?'selected':''}>${s.isOpen?'🟢':'🔴'} ${esc(s.name)} — ${esc(s.location)}</option>`).join('')}</select>
+      <span class="store-picker-status ${store?.isOpen?'open':'closed'}">${store?.isOpen?'OPEN NOW':'CLOSED'}</span>
+    </div>
+    ${store?`<div class="store-picker-meta"><span>🏪 ${esc(store.ownerName)}</span><span>📍 ${esc(store.location)}</span><span>🧺 ${Number(store.productCount||0)} item(s)</span><span>🕒 ${esc(store.openReason||'')}</span></div>`:''}
+  </div>`;
 }
 function selectedStoreProducts(){return state.products.filter(p=>p.sellerId===state.selectedStoreId);}
 function shopPage(){
@@ -126,11 +126,10 @@ function shopPage(){
   const store=state.stores.find(x=>x.id===state.selectedStoreId);
   const storeProducts=selectedStoreProducts();
   const filtered=storeProducts.filter(p => (state.filter==='All'||p.category===state.filter) && (`${p.name} ${p.category}`).toLowerCase().includes(state.search.toLowerCase()));
-  return `${contentHead('WELCOME TO THE PALENGKE','Choose your seller store.','Every approved seller appears here as a separate store. Choose one to see only that seller’s items.',`<button class="btn btn-ghost" data-section="settings">⚙️ Settings</button><button class="btn btn-ghost" data-section="orders">📦 My orders (${selectedOrders().length})</button>`)}
+  return `${contentHead('WELCOME TO THE PALENGKE','Choose your seller store.','Every approved seller appears here as a separate store. Choose one to see only that seller’s items.',`<button class="btn btn-ghost" data-section="orders">📦 My orders (${selectedOrders().length})</button>`)}
     <section class="shop-hero"><div class="hero-content"><div class="hero-kicker">✨ Approved local sellers</div><h2>Choose a store,<br>then shop its items.</h2><p>${state.stores.length} approved seller ${state.stores.length===1?'store is':'stores are'} currently listed.</p><span class="hero-chip">🛵 Fast delivery · Cash on Delivery</span></div><div class="hero-circle"></div><span class="hero-art" aria-hidden="true">🏪</span></section>
-    <div class="section-head"><div><h2>All approved seller stores</h2><p>${state.stores.length} ${state.stores.length===1?'store':'stores'} available to browse</p></div></div>
-    ${storeCards()}
-    ${store ? `<div class="selected-store-banner"><div><span>Viewing store</span><strong>${esc(store.name)}</strong><small>📍 ${esc(store.location)} · ${esc(store.openReason||'')}</small></div><span class="verified-store">${store.isOpen?'🟢 OPEN':'🔴 CLOSED'}</span></div>
+    ${storePicker()}
+    ${store ? `
     ${!store.isOpen?`<div class="notice">This store is currently closed. You can browse its items, but checkout is disabled until the seller opens the store or the automatic opening time begins.</div>`:''}
     <div class="section-head"><div><h2>Shop by category</h2><p>Items sold by ${esc(store.name)}</p></div></div>
     <div class="category-pills">${['All','Vegetables','Meat','Fish','Fruits','Pantry','Other'].map(c=>`<button class="pill ${c===state.filter?'active':''}" data-filter="${c}">${c==='All'?'🧺 ':''}${c}</button>`).join('')}</div>
@@ -173,7 +172,7 @@ function sellerInventoryPanel(){
 }
 function customerOrdersPage(){
   const group=selectedOrders();
-  return `${contentHead('TRACK YOUR DELIVERY','My orders','Follow every step, from the market stall to your door.',`<button class="btn btn-ghost" data-section="settings">⚙️ Settings</button><button class="btn btn-ghost" data-section="shop">← Back to market</button>`)}
+  return `${contentHead('TRACK YOUR DELIVERY','My orders','Follow every step, from the market stall to your door.',`<button class="btn btn-ghost" data-section="shop">← Back to market</button>`)}
     ${group.length ? `<div class="columns"><div class="panel"><div class="panel-heading"><div><h2>Order history</h2><p class="panel-subtitle">${group.length} placed order(s)</p></div><span class="count-chip">Live updates</span></div><div class="order-list">${group.map(orderTile).join('')}</div></div>${detailPanel(selectedOrder())}</div>` : empty('You haven’t placed an order yet','Add fresh items to your cart to see your order status and tracking here.','🛍️')}`;
 }
 function customerSettingsPage(){
@@ -264,10 +263,12 @@ function syncAuthChrome(){
   const mobileRoleTabs=$('#mobile-role-tabs');
   const railLabel=document.querySelector('.rail-label');
   const railNote=document.querySelector('.rail-note');
+  const railBottom=document.querySelector('.rail-bottom');
   if(roleRail)roleRail.classList.toggle('hidden',loggedIn);
   if(mobileRoleTabs)mobileRoleTabs.classList.toggle('hidden',loggedIn);
   if(railLabel)railLabel.classList.toggle('hidden',loggedIn);
   if(railNote)railNote.classList.toggle('hidden',loggedIn);
+  if(railBottom)railBottom.classList.toggle('hidden',loggedIn);
 }
 function updateCounters(){
   syncAuthChrome();
@@ -339,7 +340,7 @@ function accountModal(){
         ? `<div class="detail-row"><span>Delivery address</span><strong>${esc(p.deliveryAddress||'Not set')}</strong></div>`
         : '';
   const initial=((u.name||role||'U').trim()[0]||'U').toUpperCase();
-  return `<div class="overlay account-overlay" data-close-account-modal><div class="modal-card account-profile-card" role="dialog" aria-modal="true" aria-label="Account details" onclick="event.stopPropagation()"><div class="modal-header"><div><div class="eyebrow">MY ACCOUNT</div><h2 style="margin-top:5px">Account details</h2></div><button type="button" class="close-btn" data-close-account-modal aria-label="Close account details">×</button></div><div class="account-profile-head"><div class="account-profile-avatar">${initial}</div><div><h3>${esc(u.name||'User')}</h3><p>${esc((role||'user').charAt(0).toUpperCase()+(role||'user').slice(1))}</p></div></div><div class="account-profile-details"><div class="detail-row"><span>Email</span><strong>${esc(u.email||'—')}</strong></div><div class="detail-row"><span>Phone</span><strong>${esc(u.phone||'—')}</strong></div>${details}</div></div></div>`;
+  return `<div class="overlay account-overlay" data-close-account-modal><div class="modal-card account-profile-card" role="dialog" aria-modal="true" aria-label="Account details"><div class="modal-header"><div><div class="eyebrow">MY ACCOUNT</div><h2 style="margin-top:5px">Account details</h2></div><button type="button" class="close-btn" data-close-account-modal aria-label="Close account details">×</button></div><div class="account-profile-head"><div class="account-profile-avatar">${initial}</div><div><h3>${esc(u.name||'User')}</h3><p>${esc((role||'user').charAt(0).toUpperCase()+(role||'user').slice(1))}</p></div></div><div class="account-profile-details"><div class="detail-row"><span>Email</span><strong>${esc(u.email||'—')}</strong></div><div class="detail-row"><span>Phone</span><strong>${esc(u.phone||'—')}</strong></div>${details}</div></div></div>`;
 }
 function renderModal(){
   $('#modal-root').innerHTML=state.accountModalOpen ? accountModal() : (state.modalOpen ? cartModal() : '');
@@ -642,6 +643,7 @@ async function placeOrder(event){
   }catch(err){toast('⚠ '+err.message);if(submit)submit.disabled=false;}
 }
 document.addEventListener('click',async event=>{
+  if(event.target.matches('[data-close-account-modal]')){state.accountModalOpen=false;render();return;}
   const element=event.target.closest('button');if(!element)return;
   if(element.dataset.role){switchRole(element.dataset.role);return;}
   if(element.hasAttribute('data-account-menu')){state.accountMenuOpen=!state.accountMenuOpen;updateCounters();return;}
@@ -729,6 +731,12 @@ document.addEventListener('input',event=>{
   if(['customer-name','delivery-address','delivery-notes'].includes(event.target.id))captureDraft();
 });
 document.addEventListener('change',event=>{
+  if(event.target.id==='store-select'){
+    const nextStore=event.target.value;
+    if(nextStore===state.selectedStoreId)return;
+    if(cartCount() && !window.confirm('Switch seller stores? Your current cart will be cleared so products are not mixed between sellers.')){event.target.value=state.selectedStoreId;return;}
+    state.cart={};saveCart();state.selectedStoreId=nextStore;state.filter='All';state.search='';render();toast('🏪 Store selected');return;
+  }
   if(event.target.id==='customer-neighborhood'){
     captureDraft();const loc=state.locations.find(l=>l.id===event.target.value);
     if(loc){state.draftLocation=loc;state.draftAddress=loc.address;if($('#delivery-address'))$('#delivery-address').value=loc.address;}
