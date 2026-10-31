@@ -171,3 +171,14 @@ For security, passwords are stored only as one-way hashes and are not written to
 - The duplicate Customer Settings buttons were removed. Settings remains in the profile-circle menu.
 - Approved seller stores are now selected from a compact dropdown instead of large store cards.
 - The selected store's open/closed state, location, owner and item count remain visible before browsing its catalog.
+
+
+## Live GPS delivery tracking update
+
+- Sellers should open their Seller dashboard once at the physical stall and click **Use this device location** to save the exact pickup GPS.
+- Drivers can share **real GPS** immediately after accepting a delivery. The app uses `navigator.geolocation.watchPosition()` with high accuracy and sends live coordinates to the backend.
+- Before pickup, the active route is rider → seller. After **Start Delivery**, it switches to rider → customer.
+- Customers receive in-app status alerts for seller confirmation, driver request/assignment, pickup, on-the-way, nearby, and delivered. If browser notification permission is enabled, the same alerts can appear as browser notifications while the app is active/backgrounded.
+- The nearby alert is triggered once when live rider GPS is within about **500 m** of the customer's GPS destination.
+- Accurate tracking requires HTTPS, location permission, Location Services enabled, and a customer checkout destination captured with **Use my exact GPS location**. Typed addresses alone do not automatically become exact coordinates in this prototype.
+- This prototype does not provide true background push notifications when the web app is fully terminated; that requires a push service/APNs or a native notification backend.

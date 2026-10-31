@@ -96,6 +96,10 @@ function ensureSellerCommerce(seller){
     seller.profile.storeSettings={mode:'manual',manualOpen:true,openTime:'06:00',closeTime:'18:00',days:[0,1,2,3,4,5,6]};
     changed=true;
   }
+  if(seller.email==='seller@example.test' && !validateLocation(seller.profile.storeCoordinates)){
+    seller.profile.storeCoordinates={lat:MARKET.lat,lng:MARKET.lng,updatedAt:new Date().toISOString()};
+    changed=true;
+  }
   if(changed) saveUsers();
 }
 function manilaClock(){
@@ -115,7 +119,7 @@ function storeOpenInfo(seller){
   return {isOpen:scheduled,reason:scheduled?'Open by schedule':`Closed · opens ${st.openTime||'06:00'}`};
 }
 function sellerProducts(seller){ ensureSellerCommerce(seller); return seller.profile.products.filter(p=>p && p.active!==false); }
-function approvedStores(){ return users.filter(u=>u.role==='seller' && (u.approvalStatus||'pending')==='approved').map(u=>{const open=storeOpenInfo(u),products=sellerProducts(u);return {id:u.id,name:u.profile?.storeName||u.name,ownerName:u.name,location:u.profile?.storeLocation||'Tanauan City Public Market',phone:u.phone||'',createdAt:u.createdAt||'',isOpen:open.isOpen,openReason:open.reason,productCount:products.filter(p=>Number(p.stock)>0).length,storeSettings:u.profile.storeSettings};}); }
+function approvedStores(){ return users.filter(u=>u.role==='seller' && (u.approvalStatus||'pending')==='approved').map(u=>{const open=storeOpenInfo(u),products=sellerProducts(u),coords=validateLocation(u.profile?.storeCoordinates)||MARKET;return {id:u.id,name:u.profile?.storeName||u.name,ownerName:u.name,location:u.profile?.storeLocation||'Tanauan City Public Market',coordinates:coords,hasExactLocation:!!validateLocation(u.profile?.storeCoordinates),phone:u.phone||'',createdAt:u.createdAt||'',isOpen:open.isOpen,openReason:open.reason,productCount:products.filter(p=>Number(p.stock)>0).length,storeSettings:u.profile.storeSettings};}); }
 function productsForUser(user){
   if(user.role==='seller'){ensureSellerCommerce(user);return user.profile.products.map(p=>({...p,sellerId:user.id}));}
   if(user.role==='customer') return users.filter(u=>u.role==='seller'&&(u.approvalStatus||'pending')==='approved').flatMap(u=>sellerProducts(u).map(p=>({...p,sellerId:u.id})));
@@ -207,6 +211,13 @@ function validateLocation(p) {
   const lat = Number(p?.lat), lng = Number(p?.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < 13.5 || lat > 14.5 || lng < 120.8 || lng > 121.6) return null;
   return { lat, lng };
+}
+function haversineMeters(a,b){
+  if(!a||!b) return null;
+  const R=6371000,toRad=d=>d*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat),dLng=toRad(b.lng-a.lng),lat1=toRad(a.lat),lat2=toRad(b.lat);
+  const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
 }
 const clean = (v, length = 120) => String(v || '').trim().slice(0, length);
 function orderResponse(req, res, url) {
@@ -364,6 +375,14 @@ function orderResponse(req, res, url) {
   }).catch(e=>error(res,400,e.message));
 
 
+  if(req.method==='POST' && url.pathname==='/api/seller/store-location') return parseBody(req).then(body=>{
+    if(user.role!=='seller') return error(res,403,'Seller access required.');
+    const pos=validateLocation(body); if(!pos) return error(res,400,'Could not save this store GPS position. Make sure location permission is enabled and you are within the service area.');
+    user.profile=user.profile||{}; user.profile.storeCoordinates={...pos,updatedAt:new Date().toISOString()}; saveUsers();
+    sheetEvent('seller_store_location_updated',user,{storeLocation:user.profile?.storeLocation||''}); broadcast();
+    return respond(res,200,{coordinates:pos});
+  }).catch(e=>error(res,400,e.message));
+
   if (req.method === 'GET' && url.pathname === '/api/state') {
     return respond(res, 200, { ...userSnapshot(user), market: MARKET, locations: LOCATIONS, rider: RIDER, deliveryFee: DELIVERY_FEE });
   }
@@ -404,9 +423,11 @@ function orderResponse(req, res, url) {
       const now = new Date().toISOString();
       const order = {
         id: `PX-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`,
-        customerId, customerName, sellerId:seller.id, sellerName:seller.name, storeName:seller.profile?.storeName||seller.name, storeLocation:seller.profile?.storeLocation||MARKET.address, items, subtotal, deliveryFee: DELIVERY_FEE, total: subtotal + DELIVERY_FEE,
+        customerId, customerName, sellerId:seller.id, sellerName:seller.name, storeName:seller.profile?.storeName||seller.name, storeLocation:seller.profile?.storeLocation||MARKET.address,
+        pickupLocation: validateLocation(seller.profile?.storeCoordinates)||MARKET,
+        items, subtotal, deliveryFee: DELIVERY_FEE, total: subtotal + DELIVERY_FEE,
         destination: { ...coords, address }, notes: clean(body.notes, 350), status: 'pending',
-        createdAt: now, updatedAt: now, rider: null, riderLocation: null, trackingMode: null,
+        createdAt: now, updatedAt: now, rider: null, riderLocation: null, trackingMode: null, nearCustomerAt:null, distanceToTargetMeters:null, trackingTarget:'seller',
         history: [{ status: 'pending', time: now }]
       };
       orders.unshift(order);
@@ -438,11 +459,13 @@ function orderResponse(req, res, url) {
         order.rider = null; // Unassigned booking is offered to all registered drivers.
       }
       if (body.action === 'accept_job') {
-        order.rider = { id:user.id,name:user.name,vehicle:'Motorcycle' };
-        order.riderLocation = { lat: MARKET.lat, lng: MARKET.lng, updatedAt: order.updatedAt };
+        order.rider = { id:user.id,name:user.name,vehicle:user.profile?.vehicleModel||user.profile?.motorcycleType||'Motorcycle' };
+        order.riderLocation = null;
         order.trackingMode = 'waiting';
+        order.trackingTarget = 'seller';
       }
-      if (body.action === 'start_delivery') order.trackingMode = 'waiting';
+      if (body.action === 'pickup') order.trackingTarget = 'seller';
+      if (body.action === 'start_delivery') { order.trackingMode = order.trackingMode==='gps'?'gps':'waiting'; order.trackingTarget='customer'; }
       persist(); broadcast(); sheetEvent('order_status',user,{orderId:order.id,status:order.status,action:body.action});
       return respond(res, 200, { order });
     }).catch(e => error(res, 400, e.message));
@@ -456,12 +479,21 @@ function orderResponse(req, res, url) {
       if (!['driver_assigned', 'picked_up', 'en_route'].includes(order.status)) return error(res, 409, 'Tracking is not active for this order.');
       const pos = validateLocation(body);
       if (!pos) return error(res, 400, 'Invalid GPS coordinates or outside prototype service area.');
-      order.riderLocation = { ...pos, updatedAt: new Date().toISOString() };
+      order.riderLocation = { ...pos, accuracy:Number(body.accuracy)||null, heading:Number(body.heading)||null, speed:Number(body.speed)||null, updatedAt: new Date().toISOString() };
       order.trackingMode = body.mode === 'gps' ? 'gps' : 'simulation';
       order.updatedAt = order.riderLocation.updatedAt;
+      const pickup=validateLocation(order.pickupLocation)||MARKET;
+      const target=order.status==='en_route'?order.destination:pickup;
+      order.trackingTarget=order.status==='en_route'?'customer':'seller';
+      order.distanceToTargetMeters=Math.round(haversineMeters(pos,target)||0);
+      if(order.status==='en_route' && order.distanceToTargetMeters<=500 && !order.nearCustomerAt){
+        order.nearCustomerAt=order.updatedAt;
+        order.history.push({status:'near_customer',time:order.updatedAt,distanceMeters:order.distanceToTargetMeters});
+        sheetEvent('rider_near_customer',user,{orderId:order.id,distanceMeters:order.distanceToTargetMeters});
+      }
       // Save every GPS update for this small demo; a production system should throttle & apply retention limits.
       persist(); broadcast();
-      return respond(res, 200, { ok: true });
+      return respond(res, 200, { ok: true, distanceToTargetMeters:order.distanceToTargetMeters, nearCustomerAt:order.nearCustomerAt });
     }).catch(e => error(res, 400, e.message));
   }
   return error(res, 404, 'API endpoint not found.');

@@ -14,7 +14,7 @@ const state = {
   customerName:session?.user?.name || '',
   accountMenuOpen:false, accountModalOpen:false,
   selectedOrderId:null, modalOpen:false, draftLocation:null, draftName:'', draftAddress:'', draftNotes:'',
-  online:false, hasLoaded:false, signature:'', map:null, mapEpoch:0, riderMarker:null, routeCoords:[],
+  online:false, hasLoaded:false, signature:'', map:null, mapEpoch:0, riderMarker:null, routeCoords:[], liveRouteLayer:null, lastRouteRefreshAt:0, lastRouteOrigin:null,
   demoTimer:null, demoOrderId:null, gpsWatchId:null, gpsOrderId:null, gpsEnabled:false, users:[]
 };
 let authSession=session;
@@ -75,10 +75,12 @@ function orderTimeline(order){
 }
 function mapSection(order){
   if (!['awaiting_driver','driver_assigned','picked_up','en_route','delivered'].includes(order.status)) return '';
-  return `<div class="small-label">Delivery route · Market → Customer</div>
+  const target=order.status==='en_route'||order.status==='delivered'?'Customer drop-off':'Seller pickup';
+  const distance=Number.isFinite(Number(order.distanceToTargetMeters)) ? ` · ${Number(order.distanceToTargetMeters)<1000?Math.round(order.distanceToTargetMeters)+' m':(Number(order.distanceToTargetMeters)/1000).toFixed(1)+' km'} to ${target.toLowerCase()}` : '';
+  return `<div class="small-label">Live delivery map · ${target}</div>
     <div id="delivery-map" class="tracking-map" aria-label="Delivery tracking map from seller to customer"></div>
     <div class="map-legend"><span><i class="legend-market"></i> Seller</span><span><i class="legend-drop"></i> Customer</span>${order.riderLocation ? '<span><i class="legend-rider"></i> Driver</span>' : ''}</div>
-    <div class="map-caption">${order.trackingMode === 'gps' ? '🟢 Driver GPS location (updates when device location is shared)' : order.trackingMode === 'simulation' ? '🧪 Simulated driver position — demo, not actual GPS' : 'Route shown for reference. Driver position appears when tracking starts.'} • Maps need an internet connection.</div>`;
+    <div class="map-caption">${order.trackingMode === 'gps' ? '🟢 Live driver GPS' : order.trackingMode === 'simulation' ? '🧪 Simulated driver position — demo only' : 'Waiting for driver GPS'}${distance} • Route changes from rider → seller before pickup to rider → customer after pickup.</div>`;
 }
 function detailPanel(order){
   if (!order) return `<div class="panel">${empty('Select an order','New orders and active deliveries will appear here.','🧺')}</div>`;
@@ -96,7 +98,7 @@ function detailPanel(order){
     <div class="detail-row" style="font-size:15px"><strong>Total · COD</strong><strong style="font-size:17px;color:#157b52">${money(order.total)}</strong></div>
     <div class="delivery-note">${esc(STATUS_DETAILS[order.status] || '')}</div>
     ${orderActions(order) ? `<div class="action-group">${orderActions(order)}</div>` : ''}
-    ${state.role==='driver' && order.status==='en_route' ? driverLocationActions(order) : ''}
+    ${state.role==='driver' && ['driver_assigned','picked_up','en_route'].includes(order.status) ? driverLocationActions(order) : ''}
     ${mapSection(order)}
     <div class="small-label">Order progress</div>${orderTimeline(order)}
   </div>`;
@@ -106,7 +108,7 @@ function driverLocationActions(order){
     <div class="gps-buttons">
       ${state.gpsEnabled && state.gpsOrderId===order.id ? '<button class="btn btn-danger btn-small" data-stop-gps>■ Stop GPS</button>' : '<button class="btn btn-soft btn-small" data-start-gps="'+order.id+'">📍 Share real GPS</button>'}
       ${state.demoTimer && state.demoOrderId===order.id ? '<button class="btn btn-danger btn-small" data-stop-demo>■ Stop simulation</button>' : '<button class="btn btn-ghost btn-small" data-start-demo="'+order.id+'">🧪 Simulate route</button>'}
-    </div><p class="inline-note">Real GPS requires location permission and a secure connection (localhost or HTTPS). Simulation moves a test marker along the route; it is clearly labeled for all roles.</p>`;
+    </div><p class="inline-note">Keep real GPS sharing on from job acceptance through delivery. The map follows your device toward the seller first, then toward the buyer after pickup. HTTPS and location permission are required.</p>`;
 }
 function storePicker(){
   if(!state.stores.length) return `<div class="stores-empty">${empty('No approved sellers yet','Approved seller stores will appear here after the admin reviews their accounts.','🏪')}</div>`;
@@ -151,6 +153,7 @@ function sellerInventoryPanel(){
   const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   return `<div class="seller-commerce-grid">
     <div class="panel"><div class="panel-heading"><div><h2>My store status</h2><p class="panel-subtitle">Control when buyers are allowed to order.</p></div><span class="status ${store?.isOpen?'status-approved':'status-rejected'}">${store?.isOpen?'OPEN':'CLOSED'}</span></div>
+      <div class="delivery-note"><strong>📍 Store pickup GPS:</strong> ${store?.hasExactLocation?'Exact location saved':'Using default market pin'} <button type="button" class="mini-action" data-set-store-gps>Use this device location</button></div>
       <form id="store-settings-form">
         <div class="field"><label>Store hours mode</label><select name="mode"><option value="manual" ${settings.mode==='manual'?'selected':''}>Manual open / close</option><option value="auto" ${settings.mode==='auto'?'selected':''}>Automatic schedule</option></select></div>
         <label class="toggle-row"><input type="checkbox" name="manualOpen" ${settings.manualOpen?'checked':''}><span>Manual status: Open</span></label>
@@ -172,7 +175,8 @@ function sellerInventoryPanel(){
 }
 function customerOrdersPage(){
   const group=selectedOrders();
-  return `${contentHead('TRACK YOUR DELIVERY','My orders','Follow every step, from the market stall to your door.',`<button class="btn btn-ghost" data-section="shop">← Back to market</button>`)}
+  const notif=('Notification' in window && Notification.permission==='granted')?'🔔 Notifications on':'🔔 Enable notifications';
+  return `${contentHead('TRACK YOUR DELIVERY','My orders','Follow every step, from the market stall to your door.',`<button class="btn btn-soft" data-enable-notifications>${notif}</button><button class="btn btn-ghost" data-section="shop">← Back to market</button>`)}
     ${group.length ? `<div class="columns"><div class="panel"><div class="panel-heading"><div><h2>Order history</h2><p class="panel-subtitle">${group.length} placed order(s)</p></div><span class="count-chip">Live updates</span></div><div class="order-list">${group.map(orderTile).join('')}</div></div>${detailPanel(selectedOrder())}</div>` : empty('You haven’t placed an order yet','Add fresh items to your cart to see your order status and tracking here.','🛍️')}`;
 }
 function customerSettingsPage(){
@@ -360,11 +364,36 @@ async function api(url,method='GET',body){
   if(!resp.ok)throw new Error(data.error||`Request failed (${resp.status})`);
   return data;
 }
+function notifyCustomer(title,body){
+  toast('🔔 '+body);
+  if('Notification' in window && Notification.permission==='granted'){
+    try{new Notification(title,{body,tag:'px-delivery'});}catch(_){ }
+  }
+}
+function customerStatusMessage(order,previous){
+  if(!previous || previous.status===order.status) return null;
+  const who=order.rider?.name?` ${order.rider.name}`:'';
+  return {
+    accepted:`${order.storeName||'The seller'} confirmed your order.`,
+    awaiting_driver:'Your order is ready and the seller requested a driver.',
+    driver_assigned:`Driver${who} accepted your delivery and is heading to the seller.`,
+    picked_up:`Driver${who} picked up your order from ${order.storeName||'the seller'}.`,
+    en_route:`Driver${who} is on the way to your address.`,
+    delivered:'Your Palengke Express order has been delivered.'
+  }[order.status]||null;
+}
+async function requestNotifications(){
+  if(!('Notification' in window)){toast('Browser notifications are not supported on this device.');return;}
+  const result=await Notification.requestPermission();
+  toast(result==='granted'?'🔔 Delivery notifications enabled.':'Notifications were not enabled.');
+  render();
+}
 function applyUpdate(data){
   const wasLoaded=state.hasLoaded;
+  const previousOrders=new Map(state.orders.map(o=>[o.id,o]));
   const previousIds=new Set(state.orders.map(o=>o.id));
   const previousBookings=new Set(state.orders.filter(o=>o.status==='awaiting_driver').map(o=>o.id));
-  const signature=JSON.stringify(data.orders.map(o=>[o.id,o.status,o.rider?.id,o.customerName,o.total,o.history.length]));
+  const signature=JSON.stringify(data.orders.map(o=>[o.id,o.status,o.rider?.id,o.customerName,o.total,o.history.length,o.nearCustomerAt||'']));
   const movementOnly=wasLoaded && signature===state.signature;
   state.orders=data.orders;
   if(Array.isArray(data.users)) state.users=data.users;
@@ -376,8 +405,19 @@ function applyUpdate(data){
   if(wasLoaded){
     if(state.role==='seller' && data.orders.some(o=>o.status==='pending'&&!previousIds.has(o.id)))toast('🔔 New order received!');
     if(state.role==='driver' && data.orders.some(o=>o.status==='awaiting_driver'&&!previousBookings.has(o.id)))toast('🛵 Seller booked a new delivery!');
+    if(state.role==='customer'){
+      for(const order of data.orders){
+        const prev=previousOrders.get(order.id); if(!prev) continue;
+        const msg=customerStatusMessage(order,prev); if(msg) notifyCustomer('Palengke Express',msg);
+        if(order.nearCustomerAt && !prev.nearCustomerAt){
+          const dist=Number(order.distanceToTargetMeters)||0;
+          notifyCustomer('Rider nearby',`Your rider is nearby${dist?` — about ${dist<1000?Math.round(dist)+' m':(dist/1000).toFixed(1)+' km'} away`:''}. Please prepare to receive your order.`);
+        }
+      }
+    }
   }
 }
+
 async function init(){
   try{
     const data=await api('/api/state');
@@ -398,7 +438,7 @@ function setConnection(connected){
   const el=$('#connection');el.classList.toggle('offline',!connected);
   el.innerHTML=`<span class="live-dot"></span>${connected?'Live · Connected':'Reconnecting…'}`;
 }
-function destroyMap(){state.mapEpoch++;if(state.map){state.map.remove();state.map=null;}state.riderMarker=null;state.routeCoords=[];}
+function destroyMap(){state.mapEpoch++;if(state.map){state.map.remove();state.map=null;}state.riderMarker=null;state.routeCoords=[];state.liveRouteLayer=null;state.lastRouteOrigin=null;state.lastRouteRefreshAt=0;}
 function pointIcon(emoji){return L.divIcon({html:`<span style="font-size:27px;line-height:34px">${emoji}</span>`,className:'map-icon',iconSize:[34,34],iconAnchor:[17,29]});}
 async function fetchRoute(from,to){
   const fallback=[[from.lat,from.lng],[to.lat,to.lng]];
@@ -415,36 +455,44 @@ async function fetchRoute(from,to){
 }
 async function initMap(order){
   const epoch=++state.mapEpoch;
-  if(typeof L==='undefined'){
-    $('#delivery-map').innerHTML='<div class="notice">Could not load the map library. Check your internet connection.</div>';return;
-  }
-  const market=state.market,drop=order.destination;
-  const map=L.map('delivery-map',{scrollWheelZoom:false,zoomControl:false,attributionControl:true});
-  state.map=map;
+  if(typeof L==='undefined'){$('#delivery-map').innerHTML='<div class="notice"><strong>Map failed to load.</strong><br>The map library was blocked or did not load. Reload the page. If it continues, disable a content blocker for this site.</div>';return;}
+  const pickup=order.pickupLocation||state.stores.find(s=>s.id===order.sellerId)?.coordinates||state.market,drop=order.destination;
+  const map=L.map('delivery-map',{scrollWheelZoom:false,zoomControl:false,attributionControl:true});state.map=map;
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',maxZoom:19}).addTo(map);
-  L.marker([market.lat,market.lng],{icon:pointIcon('🏪')}).addTo(map).bindPopup('<strong>Seller pickup</strong><br>Tanauan Public Market');
+  L.marker([pickup.lat,pickup.lng],{icon:pointIcon('🏪')}).addTo(map).bindPopup(`<strong>Seller pickup</strong><br>${esc(order.storeLocation||order.storeName||'Seller store')}`);
   L.marker([drop.lat,drop.lng],{icon:pointIcon('🏠')}).addTo(map).bindPopup(`<strong>Customer drop-off</strong><br>${esc(drop.address)}`);
-  if(order.riderLocation) state.riderMarker=L.marker([order.riderLocation.lat,order.riderLocation.lng],{icon:pointIcon('🛵')}).addTo(map).bindPopup('Rider location');
-  let bounds=L.latLngBounds([[market.lat,market.lng],[drop.lat,drop.lng]]);
-  map.fitBounds(bounds.pad(.25),{maxZoom:15});
-  const points=await fetchRoute(market,drop);
-  if(epoch!==state.mapEpoch)return;
-  state.routeCoords=points;
-  L.polyline(points,{color:'#1f9971',weight:5,opacity:.86,lineCap:'round'}).addTo(map);
-  if(order.riderLocation)L.polyline([[order.riderLocation.lat,order.riderLocation.lng],[drop.lat,drop.lng]],{color:'#2a77d9',weight:3,dashArray:'7,7',opacity:.8}).addTo(map);
+  if(order.riderLocation) state.riderMarker=L.marker([order.riderLocation.lat,order.riderLocation.lng],{icon:pointIcon('🛵')}).addTo(map).bindPopup('Live rider location');
+  let bounds=L.latLngBounds([[pickup.lat,pickup.lng],[drop.lat,drop.lng]]); if(order.riderLocation) bounds.extend([order.riderLocation.lat,order.riderLocation.lng]);map.fitBounds(bounds.pad(.25),{maxZoom:16});
+  const staticPoints=await fetchRoute(pickup,drop); if(epoch!==state.mapEpoch)return;state.routeCoords=staticPoints;
+  L.polyline(staticPoints,{color:'#7e9b8e',weight:4,opacity:.45,lineCap:'round',dashArray:'5,7'}).addTo(map);
+  await updateLiveRoute(order,true);
   setTimeout(()=>{if(epoch===state.mapEpoch)map.invalidateSize()},160);
 }
+function approxMeters(a,b){if(!a||!b)return Infinity;const dy=(a.lat-b.lat)*111000,dx=(a.lng-b.lng)*108000;return Math.hypot(dx,dy);}
+async function updateLiveRoute(order,force=false){
+  if(!state.map||!order?.riderLocation)return;
+  const now=Date.now(),origin={lat:order.riderLocation.lat,lng:order.riderLocation.lng};
+  if(!force && now-state.lastRouteRefreshAt<9000 && approxMeters(origin,state.lastRouteOrigin)<40)return;
+  state.lastRouteRefreshAt=now;state.lastRouteOrigin=origin;
+  const pickup=order.pickupLocation||state.stores.find(s=>s.id===order.sellerId)?.coordinates||state.market;
+  const target=(order.status==='en_route'||order.status==='delivered')?order.destination:pickup;
+  const points=await fetchRoute(origin,target);if(!state.map)return;
+  if(state.liveRouteLayer)state.map.removeLayer(state.liveRouteLayer);
+  state.liveRouteLayer=L.polyline(points,{color:'#147a55',weight:6,opacity:.92,lineCap:'round'}).addTo(state.map);
+}
+
 function refreshMarker(){
   if(!state.map)return;
   const order=selectedOrder();if(!order?.riderLocation)return;
   const {lat,lng}=order.riderLocation;
   if(state.riderMarker)state.riderMarker.setLatLng([lat,lng]);
   else if(typeof L!=='undefined')state.riderMarker=L.marker([lat,lng],{icon:pointIcon('🛵')}).addTo(state.map);
-  const el=$('.map-caption');
-  if(el)el.textContent=(order.trackingMode==='gps'?'🟢 Real GPS coordinates':order.trackingMode==='simulation'?'🧪 Simulated driver position — not real GPS':'Driver position available')+' · Updated '+new Date(order.riderLocation.updatedAt).toLocaleTimeString('en-PH');
+  updateLiveRoute(order).catch(()=>{});
+  const el=$('.map-caption'),dist=Number(order.distanceToTargetMeters),target=order.status==='en_route'?'customer':'seller';
+  if(el)el.textContent=(order.trackingMode==='gps'?'🟢 Live driver GPS':order.trackingMode==='simulation'?'🧪 Simulated driver position — demo only':'Driver position available')+(Number.isFinite(dist)?` · ${dist<1000?Math.round(dist)+' m':(dist/1000).toFixed(1)+' km'} to ${target}`:'')+' · Updated '+new Date(order.riderLocation.updatedAt).toLocaleTimeString('en-PH');
 }
-async function updateLocation(orderId,lat,lng,mode){
-  await api(`/api/orders/${encodeURIComponent(orderId)}/location`,'POST',{role:'driver',lat,lng,mode});
+async function updateLocation(orderId,lat,lng,mode,extra={}){
+  await api(`/api/orders/${encodeURIComponent(orderId)}/location`,'POST',{role:'driver',lat,lng,mode,...extra});
 }
 function stopDemo(){if(state.demoTimer)clearInterval(state.demoTimer);state.demoTimer=null;state.demoOrderId=null;}
 function stopGPS(){
@@ -454,7 +502,7 @@ function stopGPS(){
 async function startSimulation(orderId){
   stopGPS();stopDemo();
   const order=state.orders.find(o=>o.id===orderId);
-  if(!order||order.status!=='en_route'){toast('Start delivery first.');return;}
+  if(!order||!['driver_assigned','picked_up','en_route'].includes(order.status)){toast('Accept the delivery first.');return;}
   toast('🧪 Demo route started (simulated location)');
   state.demoOrderId=orderId;
   const points=state.routeCoords.length>1 ? [...state.routeCoords] : await fetchRoute(state.market,order.destination);
@@ -490,9 +538,9 @@ function startGPS(orderId){
   stopDemo();stopGPS();
   state.gpsEnabled=true;state.gpsOrderId=orderId;
   const watchId=navigator.geolocation.watchPosition(
-    position=>updateLocation(orderId,position.coords.latitude,position.coords.longitude,'gps').catch(e=>toast(e.message)),
-    err=>{stopGPS();toast('GPS unavailable: '+err.message);render()},
-    {enableHighAccuracy:true,maximumAge:2000,timeout:15000}
+    position=>updateLocation(orderId,position.coords.latitude,position.coords.longitude,'gps',{accuracy:position.coords.accuracy,heading:position.coords.heading,speed:position.coords.speed}).catch(e=>toast(e.message)),
+    err=>{stopGPS();const msg=err.code===1?'Location permission is denied. In Safari, allow Location for this Palengke Express site, then try again.':'GPS unavailable: '+err.message;toast('📍 '+msg);render()},
+    {enableHighAccuracy:true,maximumAge:0,timeout:20000}
   );
   state.gpsWatchId=watchId;
   render();toast('📍 Real GPS sharing requested. Allow location access.');
@@ -504,6 +552,7 @@ async function takeAction(orderId,action){
     state.selectedOrderId=orderId;
     toast(`✓ ${STATUS_NAMES[resp.order.status] || 'Updated'} successfully`);
     applyUpdate({orders:state.orders.map(o=>o.id===orderId?resp.order:o)});
+    if(action==='accept_job' && state.role==='driver') setTimeout(()=>startGPS(orderId),150);
   }catch(err){toast('⚠ '+err.message);render()}
 }
 function switchRole(role){
@@ -716,6 +765,8 @@ document.addEventListener('click',async event=>{
   if(element.dataset.adjust){captureDraft();modifyCart(element.dataset.product,Number(element.dataset.adjust));return;}
   if(element.dataset.action){element.disabled=true;await takeAction(element.dataset.id,element.dataset.action);return;}
   if(element.id==='use-customer-gps'){useCustomerGPS();return;}
+  if(element.hasAttribute('data-enable-notifications')){requestNotifications();return;}
+  if(element.hasAttribute('data-set-store-gps')){setStoreGPS();return;}
   if(element.hasAttribute('data-start-demo')){await startSimulation(element.dataset.startDemo);return;}
   if(element.hasAttribute('data-stop-demo')){stopDemo();render();toast('Simulation stopped');return;}
   if(element.hasAttribute('data-start-gps')){startGPS(element.dataset.startGps);return;}
@@ -742,6 +793,13 @@ document.addEventListener('change',event=>{
     if(loc){state.draftLocation=loc;state.draftAddress=loc.address;if($('#delivery-address'))$('#delivery-address').value=loc.address;}
   }
 });
+function setStoreGPS(){
+  if(!navigator.geolocation){toast('Location is not available on this device.');return;}
+  toast('📍 Requesting precise store location…');
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{await api('/api/seller/store-location','POST',{lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy});toast(`✓ Store GPS saved${pos.coords.accuracy?` (±${Math.round(pos.coords.accuracy)} m)`:''}.`);}catch(err){toast('⚠ '+err.message);}
+  },err=>toast(err.code===1?'📍 Location permission denied. Safari → Website Settings → Location → Allow, then try again.':'Could not get store location: '+err.message),{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+}
 async function addSellerProduct(event){
   event.preventDefault();const f=event.target;const button=f.querySelector('[type="submit"]');button.disabled=true;
   try{await api('/api/seller/products','POST',{name:f.name.value.trim(),category:f.category.value,price:Number(f.price.value),stock:Number(f.stock.value),unit:f.unit.value.trim(),emoji:f.emoji.value.trim()||'🧺'});f.reset();toast('✓ Item added to your store.');}catch(err){toast('⚠ '+err.message);button.disabled=false;}
