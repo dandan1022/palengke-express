@@ -182,3 +182,23 @@ For security, passwords are stored only as one-way hashes and are not written to
 - The nearby alert is triggered once when live rider GPS is within about **500 m** of the customer's GPS destination.
 - Accurate tracking requires HTTPS, location permission, Location Services enabled, and a customer checkout destination captured with **Use my exact GPS location**. Typed addresses alone do not automatically become exact coordinates in this prototype.
 - This prototype does not provide true background push notifications when the web app is fully terminated; that requires a push service/APNs or a native notification backend.
+
+
+## Exact customer pin & real GPS tracking
+- Customers now choose an exact drop-off point by tapping or dragging a pin on the checkout map, or by using device GPS and refining the pin.
+- The saved latitude/longitude is attached to the order and becomes the driver's drop-off target.
+- Driver tracking uses `navigator.geolocation.watchPosition({ enableHighAccuracy: true })`. The blue accuracy circle reflects the device-reported accuracy.
+- Driver can open the current exact target (seller before pickup, customer after pickup) in Google Maps for navigation.
+- Map provider does not determine GPS accuracy; the phone/device sensor and OS location permission do. For best results, use a phone outdoors with Precise Location enabled.
+
+## Live GPS tracking notes
+- Real rider tracking comes from the **driver phone's device GPS**, not from the map provider.
+- For best results, open the Driver role on an iPhone/Android phone, allow Location while using the browser, and enable Precise Location.
+- Tap **Share real GPS** after accepting the delivery and keep the delivery tab open while riding.
+- Customer and Seller maps receive rider coordinate updates through the server's live EventSource stream and show an animated 🛵 marker.
+- Customers do not need GPS permission to choose an exact destination: they can tap/drag the delivery pin on the checkout map.
+- The driver can use **Open in Google Maps** for turn-by-turn navigation to the seller before pickup and the customer after pickup.
+- Static frontend files are served with no-cache headers so Render deployments do not leave Safari using an older app.js.
+
+## Customer delivery notifications
+The Customer POV now sends an in-app notification for every delivery milestone and, when browser notification permission is enabled, a browser notification too. Milestones include seller confirmation, delivery rider assignment, order pickup, order on the way, rider nearby, and delivered. Notifications are derived from order history so rapid status changes do not skip intermediate alerts.

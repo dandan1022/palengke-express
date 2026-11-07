@@ -14,8 +14,8 @@ const state = {
   customerName:session?.user?.name || '',
   accountMenuOpen:false, accountModalOpen:false,
   selectedOrderId:null, modalOpen:false, draftLocation:null, draftName:'', draftAddress:'', draftNotes:'',
-  online:false, hasLoaded:false, signature:'', map:null, mapEpoch:0, riderMarker:null, routeCoords:[], liveRouteLayer:null, lastRouteRefreshAt:0, lastRouteOrigin:null,
-  demoTimer:null, demoOrderId:null, gpsWatchId:null, gpsOrderId:null, gpsEnabled:false, users:[]
+  online:false, hasLoaded:false, signature:'', map:null, mapEpoch:0, riderMarker:null, riderAccuracyCircle:null, routeCoords:[], liveRouteLayer:null, lastRouteRefreshAt:0, lastRouteOrigin:null, checkoutMap:null, checkoutPin:null, checkoutAccuracyCircle:null,
+  demoTimer:null, demoOrderId:null, gpsWatchId:null, gpsOrderId:null, gpsEnabled:false, gpsStarting:false, lastGpsSentAt:0, lastGpsSentPos:null, users:[]
 };
 let authSession=session;
 let desiredRole=state.role;
@@ -76,11 +76,12 @@ function orderTimeline(order){
 function mapSection(order){
   if (!['awaiting_driver','driver_assigned','picked_up','en_route','delivered'].includes(order.status)) return '';
   const target=order.status==='en_route'||order.status==='delivered'?'Customer drop-off':'Seller pickup';
-  const distance=Number.isFinite(Number(order.distanceToTargetMeters)) ? ` · ${Number(order.distanceToTargetMeters)<1000?Math.round(order.distanceToTargetMeters)+' m':(Number(order.distanceToTargetMeters)/1000).toFixed(1)+' km'} to ${target.toLowerCase()}` : '';
+  const distance=order.riderLocation&&Number.isFinite(Number(order.distanceToTargetMeters)) ? ` · ${Number(order.distanceToTargetMeters)<1000?Math.round(order.distanceToTargetMeters)+' m':(Number(order.distanceToTargetMeters)/1000).toFixed(1)+' km'} to ${target.toLowerCase()}` : '';
+  const live=order.riderLocation&&order.trackingMode==='gps';
   return `<div class="small-label">Live delivery map · ${target}</div>
     <div id="delivery-map" class="tracking-map" aria-label="Delivery tracking map from seller to customer"></div>
-    <div class="map-legend"><span><i class="legend-market"></i> Seller</span><span><i class="legend-drop"></i> Customer</span>${order.riderLocation ? '<span><i class="legend-rider"></i> Driver</span>' : ''}</div>
-    <div class="map-caption">${order.trackingMode === 'gps' ? '🟢 Live driver GPS' : order.trackingMode === 'simulation' ? '🧪 Simulated driver position — demo only' : 'Waiting for driver GPS'}${distance} • Route changes from rider → seller before pickup to rider → customer after pickup.</div>`;
+    <div class="map-legend"><span><i class="legend-market"></i> Seller</span><span><i class="legend-drop"></i> Customer</span>${order.riderLocation ? '<span><i class="legend-rider"></i> Live rider</span>' : ''}</div>
+    <div class="map-caption">${live ? '🟢 LIVE rider GPS — marker moves as the driver phone moves' : order.trackingMode === 'simulation' ? '🧪 Simulated driver position — demo only' : '⏳ Waiting for rider GPS — no live position received yet'}${distance} • Before pickup: rider → seller. After pickup: rider → customer.</div>`;
 }
 function detailPanel(order){
   if (!order) return `<div class="panel">${empty('Select an order','New orders and active deliveries will appear here.','🧺')}</div>`;
@@ -104,11 +105,16 @@ function detailPanel(order){
   </div>`;
 }
 function driverLocationActions(order){
+  const pickup=order.pickupLocation||state.stores.find(s=>s.id===order.sellerId)?.coordinates||state.market;
+  const target=order.status==='en_route'?order.destination:pickup;
+  const targetLabel=order.status==='en_route'?'customer drop-off':'seller pickup';
   return `<div class="small-label">Location sharing</div>
     <div class="gps-buttons">
       ${state.gpsEnabled && state.gpsOrderId===order.id ? '<button class="btn btn-danger btn-small" data-stop-gps>■ Stop GPS</button>' : '<button class="btn btn-soft btn-small" data-start-gps="'+order.id+'">📍 Share real GPS</button>'}
       ${state.demoTimer && state.demoOrderId===order.id ? '<button class="btn btn-danger btn-small" data-stop-demo>■ Stop simulation</button>' : '<button class="btn btn-ghost btn-small" data-start-demo="'+order.id+'">🧪 Simulate route</button>'}
-    </div><p class="inline-note">Keep real GPS sharing on from job acceptance through delivery. The map follows your device toward the seller first, then toward the buyer after pickup. HTTPS and location permission are required.</p>`;
+    </div>
+    ${target?`<button type="button" class="btn btn-primary btn-full nav-maps-btn" data-open-navigation data-lat="${target.lat}" data-lng="${target.lng}">🗺️ Open ${targetLabel} in Google Maps</button>`:''}
+    <p class="inline-note">Keep real GPS sharing on from job acceptance through delivery. The live marker comes from the rider device; the shaded radius shows the device-reported GPS accuracy. Before pickup the navigation target is the seller, then it switches to the customer’s exact pin.</p>`;
 }
 function storePicker(){
   if(!state.stores.length) return `<div class="stores-empty">${empty('No approved sellers yet','Approved seller stores will appear here after the admin reviews their accounts.','🏪')}</div>`;
@@ -300,8 +306,12 @@ function render(){
   if(o && $('#delivery-map')) initMap(o);
 }
 function toast(message){
+  const container=$('#toast-container'); if(!container)return;
+  const existing=[...container.querySelectorAll('.toast')].find(x=>x.textContent===message);
+  if(existing){existing.dataset.refresh=Date.now();return;}
+  while(container.children.length>=3)container.firstElementChild?.remove();
   const box=document.createElement('div');box.className='toast';box.textContent=message;
-  $('#toast-container').append(box);setTimeout(()=>box.remove(),3800);
+  container.append(box);setTimeout(()=>box.remove(),4200);
 }
 function cartCount(){return Object.values(state.cart).reduce((n,q)=>n+q,0);}
 function cartSubtotal(){return state.products.reduce((sum,p)=>sum+(state.cart[p.id]||0)*p.price,0);}
@@ -321,12 +331,10 @@ function cartModal(){
     ${cart.length ? `<div>${cart.map(p=>`<div class="cart-row"><div class="cart-emoji">${p.emoji}</div><div class="cart-info"><strong>${esc(p.name)}</strong><small>${money(p.price)} · ${p.unit}</small></div><div class="qty"><button type="button" data-adjust="-1" data-product="${p.id}" aria-label="Remove one">−</button><span>${state.cart[p.id]}</span><button type="button" data-adjust="1" data-product="${p.id}" aria-label="Add one">+</button></div></div>`).join('')}</div>
       <form id="checkout-form">
       <div class="field"><label for="customer-name">Your name</label><input id="customer-name" name="customerName" type="text" maxlength="70" value="${esc(state.draftName)}" placeholder="Juan Dela Cruz" required></div>
-      <div class="field"><label for="customer-neighborhood">Delivery area</label><select id="customer-neighborhood" name="neighborhood">
-        ${state.locations.map(l=>`<option value="${l.id}" ${state.draftLocation?.id===l.id?'selected':''}>${esc(l.name)}</option>`).join('')}
-        ${state.draftLocation?.id==='gps' ? '<option value="gps" selected>📍 My GPS location</option>' : ''}
-        </select></div>
-      <button type="button" class="btn btn-ghost btn-small" id="use-customer-gps">📍 Use my exact GPS location</button>
-      <div class="field"><label for="delivery-address">House / street / complete delivery address</label><textarea id="delivery-address" name="address" maxlength="180" placeholder="Add your street and house number" required>${esc(state.draftAddress)}</textarea><small class="inline-note">Sample barangay pins are approximate. For correct navigation, use the GPS option or enter accurate coordinates in a production system.</small></div>
+      <div class="field"><label>Exact delivery pin</label><div class="location-actions"><button type="button" class="btn btn-ghost btn-small" id="use-customer-gps">📍 Use my device GPS</button><button type="button" class="btn btn-ghost btn-small" id="center-tanauan">⌖ Center Tanauan</button></div>
+      <div id="customer-pin-map" class="checkout-pin-map" aria-label="Choose exact delivery location"></div>
+      <div class="pin-help"><strong>Tap the map or drag the house pin</strong> to the exact gate / house where the rider should deliver.<br><span id="pin-coordinates">${state.draftLocation?`${Number(state.draftLocation.lat).toFixed(6)}, ${Number(state.draftLocation.lng).toFixed(6)}`:'No exact pin selected yet'}</span></div></div>
+      <div class="field"><label for="delivery-address">House / street / complete delivery address</label><textarea id="delivery-address" name="address" maxlength="180" placeholder="House no., street, subdivision / barangay" required>${esc(state.draftAddress)}</textarea><small class="inline-note">The rider navigates to the exact map pin above. The written address is used as a delivery reference.</small></div>
       <div class="field"><label for="delivery-notes">Order notes (optional)</label><textarea id="delivery-notes" name="notes" maxlength="350" placeholder="E.g., call upon arrival">${esc(state.draftNotes)}</textarea></div>
       <div class="checkout-total"><div class="line-between"><span>Subtotal</span><strong>${money(cartSubtotal())}</strong></div><div class="line-between"><span>Delivery fee</span><strong>${money(state.deliveryFee)}</strong></div><div class="line-between grand"><span>Total to pay (COD)</span><span>${money(cartSubtotal()+state.deliveryFee)}</span></div></div>
       <div class="checkout-actions"><button class="btn btn-primary btn-full" type="submit">Place order · ${money(cartSubtotal()+state.deliveryFee)}</button><span class="inline-note">Cash on Delivery only. This is a demonstration and will not charge you.</span></div></form>` : empty('Your basket is empty','Choose a few fresh products to place an order.','🧺')}
@@ -348,15 +356,16 @@ function accountModal(){
 }
 function renderModal(){
   $('#modal-root').innerHTML=state.accountModalOpen ? accountModal() : (state.modalOpen ? cartModal() : '');
+  if(state.modalOpen&&!state.accountModalOpen)setTimeout(initCheckoutMap,0);
 }
 function openCart(){
   state.modalOpen=true;
-  if(!state.draftLocation)state.draftLocation=state.locations[0];
   if(!state.draftName)state.draftName=state.customerName;
-  if(!state.draftAddress)state.draftAddress=authSession?.user?.profile?.deliveryAddress || state.draftLocation?.address || '';
-  renderModal();
+  if(!state.draftAddress)state.draftAddress=authSession?.user?.profile?.deliveryAddress || '';
+  // Never fall back to an approximate barangay coordinate. Customer must pin the exact destination or use device GPS.
+  renderModal();setTimeout(initCheckoutMap,0);
 }
-function closeCart(){state.modalOpen=false;renderModal();}
+function closeCart(){destroyCheckoutMap();state.modalOpen=false;renderModal();}
 async function api(url,method='GET',body){
   const resp=await fetch(url,{method,headers:{...(body?{'Content-Type':'application/json'}:{}),...(authSession?{Authorization:'Bearer '+authSession.token}:{})},body:body?JSON.stringify(body):undefined});
   let data;
@@ -364,23 +373,30 @@ async function api(url,method='GET',body){
   if(!resp.ok)throw new Error(data.error||`Request failed (${resp.status})`);
   return data;
 }
-function notifyCustomer(title,body){
+function notifyCustomer(title,body,tag='px-delivery'){
   toast('🔔 '+body);
   if('Notification' in window && Notification.permission==='granted'){
-    try{new Notification(title,{body,tag:'px-delivery'});}catch(_){ }
+    try{new Notification(title,{body,tag});}catch(_){ }
   }
 }
-function customerStatusMessage(order,previous){
-  if(!previous || previous.status===order.status) return null;
+function customerStatusMessage(order,status){
   const who=order.rider?.name?` ${order.rider.name}`:'';
   return {
     accepted:`${order.storeName||'The seller'} confirmed your order.`,
-    awaiting_driver:'Your order is ready and the seller requested a driver.',
-    driver_assigned:`Driver${who} accepted your delivery and is heading to the seller.`,
-    picked_up:`Driver${who} picked up your order from ${order.storeName||'the seller'}.`,
-    en_route:`Driver${who} is on the way to your address.`,
+    awaiting_driver:'Your order is ready and the seller is finding a delivery rider.',
+    driver_assigned:`Delivery rider${who} has been assigned to your order and is heading to the seller for pickup.`,
+    picked_up:`Your order has been picked up by${who||' the delivery rider'}.`,
+    en_route:`Your order is on the way. Rider${who} is now heading to your delivery location.`,
     delivered:'Your Palengke Express order has been delivered.'
-  }[order.status]||null;
+  }[status]||null;
+}
+function customerMilestoneEvents(order,previous){
+  if(!previous) return [];
+  const prevHistory=Array.isArray(previous.history)?previous.history:[];
+  const nextHistory=Array.isArray(order.history)?order.history:[];
+  const statuses=new Set(['accepted','awaiting_driver','driver_assigned','picked_up','en_route','delivered']);
+  // Use history deltas so rapid status changes cannot skip intermediate customer notifications.
+  return nextHistory.slice(prevHistory.length).filter(event=>statuses.has(event?.status));
 }
 async function requestNotifications(){
   if(!('Notification' in window)){toast('Browser notifications are not supported on this device.');return;}
@@ -408,10 +424,19 @@ function applyUpdate(data){
     if(state.role==='customer'){
       for(const order of data.orders){
         const prev=previousOrders.get(order.id); if(!prev) continue;
-        const msg=customerStatusMessage(order,prev); if(msg) notifyCustomer('Palengke Express',msg);
+        const milestones=customerMilestoneEvents(order,prev);
+        for(const event of milestones){
+          const msg=customerStatusMessage(order,event.status);
+          if(msg) notifyCustomer('Palengke Express',msg,`px-${order.id}-${event.status}`);
+        }
+        // Fallback for old orders/history shapes where only the current status changed.
+        if(!milestones.length && prev.status!==order.status){
+          const msg=customerStatusMessage(order,order.status);
+          if(msg) notifyCustomer('Palengke Express',msg,`px-${order.id}-${order.status}`);
+        }
         if(order.nearCustomerAt && !prev.nearCustomerAt){
           const dist=Number(order.distanceToTargetMeters)||0;
-          notifyCustomer('Rider nearby',`Your rider is nearby${dist?` — about ${dist<1000?Math.round(dist)+' m':(dist/1000).toFixed(1)+' km'} away`:''}. Please prepare to receive your order.`);
+          notifyCustomer('Rider nearby',`Your rider is nearby${dist?` — about ${dist<1000?Math.round(dist)+' m':(dist/1000).toFixed(1)+' km'} away`:''}. Please prepare to receive your order.`,`px-${order.id}-nearby`);
         }
       }
     }
@@ -422,7 +447,7 @@ async function init(){
   try{
     const data=await api('/api/state');
     state.products=data.products;state.stores=data.stores||[];if(!state.selectedStoreId&&state.stores[0])state.selectedStoreId=state.stores[0].id;state.market=data.market;state.locations=data.locations;state.rider=state.role==='driver'?{id:authSession.user.id,name:authSession.user.name,vehicle:'Motorcycle'}:data.rider;state.deliveryFee=data.deliveryFee;
-    state.draftLocation=data.locations[0];state.draftAddress=data.locations[0].address;
+    state.draftLocation=null;state.draftAddress=authSession?.user?.profile?.deliveryAddress||'';
     if(state.role==='admin'){try{const ud=await api('/api/admin/users');state.users=ud.users||[];}catch(e){console.error(e)}}
     state.hasLoaded=true;
     applyUpdate(data);
@@ -438,8 +463,36 @@ function setConnection(connected){
   const el=$('#connection');el.classList.toggle('offline',!connected);
   el.innerHTML=`<span class="live-dot"></span>${connected?'Live · Connected':'Reconnecting…'}`;
 }
-function destroyMap(){state.mapEpoch++;if(state.map){state.map.remove();state.map=null;}state.riderMarker=null;state.routeCoords=[];state.liveRouteLayer=null;state.lastRouteOrigin=null;state.lastRouteRefreshAt=0;}
+function destroyMap(){state.mapEpoch++;if(state.map){state.map.remove();state.map=null;}state.riderMarker=null;if(state.riderAccuracyCircle){state.riderAccuracyCircle=null;}state.routeCoords=[];state.liveRouteLayer=null;state.lastRouteOrigin=null;state.lastRouteRefreshAt=0;}
+function destroyCheckoutMap(){if(state.checkoutMap){state.checkoutMap.remove();state.checkoutMap=null;}state.checkoutPin=null;state.checkoutAccuracyCircle=null;}
+function updatePinReadout(){const el=$('#pin-coordinates');if(el&&state.draftLocation)el.textContent=`Exact pin: ${Number(state.draftLocation.lat).toFixed(6)}, ${Number(state.draftLocation.lng).toFixed(6)}${Number.isFinite(Number(state.draftLocation.accuracy))?` · GPS accuracy ±${Math.round(Number(state.draftLocation.accuracy))} m`:''}`;}
+function setCustomerPin(lat,lng,{accuracy=null,source='pin',pan=true}={}){
+  if(!Number.isFinite(Number(lat))||!Number.isFinite(Number(lng)))return;
+  state.draftLocation={id:source,name:source==='gps'?'My device GPS':'Pinned delivery point',address:state.draftAddress||'Exact pinned delivery point',lat:Number(lat),lng:Number(lng),accuracy:Number.isFinite(Number(accuracy))?Number(accuracy):null};
+  if(state.checkoutMap){
+    if(!state.checkoutPin){state.checkoutPin=L.marker([lat,lng],{icon:pointIcon('🏠'),draggable:true}).addTo(state.checkoutMap);state.checkoutPin.on('dragend',e=>{const p=e.target.getLatLng();setCustomerPin(p.lat,p.lng,{source:'pin',pan:false});});}
+    else state.checkoutPin.setLatLng([lat,lng]);
+    if(state.checkoutAccuracyCircle){state.checkoutMap.removeLayer(state.checkoutAccuracyCircle);state.checkoutAccuracyCircle=null;}
+    if(Number.isFinite(Number(accuracy))&&Number(accuracy)>0)state.checkoutAccuracyCircle=L.circle([lat,lng],{radius:Number(accuracy),weight:1,opacity:.55,fillOpacity:.09}).addTo(state.checkoutMap);
+    if(pan)state.checkoutMap.setView([lat,lng],Math.max(state.checkoutMap.getZoom(),17));
+  }
+  updatePinReadout();
+}
+function initCheckoutMap(){
+  if(!state.modalOpen||!$('#customer-pin-map')||typeof L==='undefined')return;
+  destroyCheckoutMap();
+  const center=state.draftLocation&&Number.isFinite(Number(state.draftLocation.lat))?state.draftLocation:(state.market||{lat:14.08204,lng:121.14672});
+  const map=L.map('customer-pin-map',{zoomControl:true,attributionControl:true}).setView([center.lat,center.lng],state.draftLocation?17:15);state.checkoutMap=map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors',maxZoom:20}).addTo(map);
+  map.on('click',e=>setCustomerPin(e.latlng.lat,e.latlng.lng,{source:'pin',pan:false}));
+  if(state.draftLocation&&Number.isFinite(Number(state.draftLocation.lat)))setCustomerPin(state.draftLocation.lat,state.draftLocation.lng,{accuracy:state.draftLocation.accuracy,source:state.draftLocation.id||'pin',pan:false});
+  setTimeout(()=>map.invalidateSize(),120);
+}
 function pointIcon(emoji){return L.divIcon({html:`<span style="font-size:27px;line-height:34px">${emoji}</span>`,className:'map-icon',iconSize:[34,34],iconAnchor:[17,29]});}
+function liveRiderIcon(heading=null){
+  const angle=Number.isFinite(Number(heading))?Number(heading):0;
+  return L.divIcon({html:`<div class="live-rider-marker"><span class="rider-pulse"></span><span class="rider-emoji" style="transform:rotate(${angle}deg)">🛵</span></div>`,className:'map-icon rider-map-icon',iconSize:[46,46],iconAnchor:[23,23]});
+}
 async function fetchRoute(from,to){
   const fallback=[[from.lat,from.lng],[to.lat,to.lng]];
   try{
@@ -461,7 +514,10 @@ async function initMap(order){
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',maxZoom:19}).addTo(map);
   L.marker([pickup.lat,pickup.lng],{icon:pointIcon('🏪')}).addTo(map).bindPopup(`<strong>Seller pickup</strong><br>${esc(order.storeLocation||order.storeName||'Seller store')}`);
   L.marker([drop.lat,drop.lng],{icon:pointIcon('🏠')}).addTo(map).bindPopup(`<strong>Customer drop-off</strong><br>${esc(drop.address)}`);
-  if(order.riderLocation) state.riderMarker=L.marker([order.riderLocation.lat,order.riderLocation.lng],{icon:pointIcon('🛵')}).addTo(map).bindPopup('Live rider location');
+  if(order.riderLocation){
+    state.riderMarker=L.marker([order.riderLocation.lat,order.riderLocation.lng],{icon:liveRiderIcon(order.riderLocation.heading)}).addTo(map).bindPopup('Live rider location');
+    if(Number(order.riderLocation.accuracy)>0)state.riderAccuracyCircle=L.circle([order.riderLocation.lat,order.riderLocation.lng],{radius:Number(order.riderLocation.accuracy),weight:1,opacity:.45,fillOpacity:.08}).addTo(map);
+  }
   let bounds=L.latLngBounds([[pickup.lat,pickup.lng],[drop.lat,drop.lng]]); if(order.riderLocation) bounds.extend([order.riderLocation.lat,order.riderLocation.lng]);map.fitBounds(bounds.pad(.25),{maxZoom:16});
   const staticPoints=await fetchRoute(pickup,drop); if(epoch!==state.mapEpoch)return;state.routeCoords=staticPoints;
   L.polyline(staticPoints,{color:'#7e9b8e',weight:4,opacity:.45,lineCap:'round',dashArray:'5,7'}).addTo(map);
@@ -485,11 +541,14 @@ function refreshMarker(){
   if(!state.map)return;
   const order=selectedOrder();if(!order?.riderLocation)return;
   const {lat,lng}=order.riderLocation;
-  if(state.riderMarker)state.riderMarker.setLatLng([lat,lng]);
-  else if(typeof L!=='undefined')state.riderMarker=L.marker([lat,lng],{icon:pointIcon('🛵')}).addTo(state.map);
+  if(state.riderMarker){state.riderMarker.setLatLng([lat,lng]);state.riderMarker.setIcon(liveRiderIcon(order.riderLocation.heading));}
+  else if(typeof L!=='undefined')state.riderMarker=L.marker([lat,lng],{icon:liveRiderIcon(order.riderLocation.heading)}).addTo(state.map);
+  if(Number(order.riderLocation.accuracy)>0){if(state.riderAccuracyCircle)state.riderAccuracyCircle.setLatLng([lat,lng]).setRadius(Number(order.riderLocation.accuracy));else state.riderAccuracyCircle=L.circle([lat,lng],{radius:Number(order.riderLocation.accuracy),weight:1,opacity:.45,fillOpacity:.08}).addTo(state.map);}
   updateLiveRoute(order).catch(()=>{});
   const el=$('.map-caption'),dist=Number(order.distanceToTargetMeters),target=order.status==='en_route'?'customer':'seller';
-  if(el)el.textContent=(order.trackingMode==='gps'?'🟢 Live driver GPS':order.trackingMode==='simulation'?'🧪 Simulated driver position — demo only':'Driver position available')+(Number.isFinite(dist)?` · ${dist<1000?Math.round(dist)+' m':(dist/1000).toFixed(1)+' km'} to ${target}`:'')+' · Updated '+new Date(order.riderLocation.updatedAt).toLocaleTimeString('en-PH');
+  const targetPos=order.status==='en_route'?order.destination:(order.pickupLocation||state.stores.find(s=>s.id===order.sellerId)?.coordinates||state.market);
+  if(targetPos&&state.role!=='driver'){try{state.map.fitBounds(L.latLngBounds([[lat,lng],[targetPos.lat,targetPos.lng]]).pad(.35),{maxZoom:17,animate:true,duration:.65});}catch(_){}}
+  if(el)el.textContent=(order.trackingMode==='gps'?'🟢 LIVE rider GPS':order.trackingMode==='simulation'?'🧪 Simulated driver position — demo only':'Driver position available')+(Number.isFinite(dist)?` · ${dist<1000?Math.round(dist)+' m':(dist/1000).toFixed(1)+' km'} to ${target}`:'')+' · Updated '+new Date(order.riderLocation.updatedAt).toLocaleTimeString('en-PH');
 }
 async function updateLocation(orderId,lat,lng,mode,extra={}){
   await api(`/api/orders/${encodeURIComponent(orderId)}/location`,'POST',{role:'driver',lat,lng,mode,...extra});
@@ -497,7 +556,7 @@ async function updateLocation(orderId,lat,lng,mode,extra={}){
 function stopDemo(){if(state.demoTimer)clearInterval(state.demoTimer);state.demoTimer=null;state.demoOrderId=null;}
 function stopGPS(){
   if(state.gpsWatchId!==null)navigator.geolocation.clearWatch(state.gpsWatchId);
-  state.gpsWatchId=null;state.gpsEnabled=false;state.gpsOrderId=null;
+  state.gpsWatchId=null;state.gpsEnabled=false;state.gpsStarting=false;state.gpsOrderId=null;
 }
 async function startSimulation(orderId){
   stopGPS();stopDemo();
@@ -534,16 +593,29 @@ async function startSimulation(orderId){
   render();
 }
 function startGPS(orderId){
-  if(!navigator.geolocation){toast('Geolocation is not supported by your browser.');return;}
-  stopDemo();stopGPS();
-  state.gpsEnabled=true;state.gpsOrderId=orderId;
-  const watchId=navigator.geolocation.watchPosition(
-    position=>updateLocation(orderId,position.coords.latitude,position.coords.longitude,'gps',{accuracy:position.coords.accuracy,heading:position.coords.heading,speed:position.coords.speed}).catch(e=>toast(e.message)),
-    err=>{stopGPS();const msg=err.code===1?'Location permission is denied. In Safari, allow Location for this Palengke Express site, then try again.':'GPS unavailable: '+err.message;toast('📍 '+msg);render()},
-    {enableHighAccuracy:true,maximumAge:0,timeout:20000}
-  );
-  state.gpsWatchId=watchId;
-  render();toast('📍 Real GPS sharing requested. Allow location access.');
+  if(!navigator.geolocation){toast('📍 This browser cannot share GPS. Use the driver phone in Safari/Chrome.');return;}
+  if(state.gpsStarting || (state.gpsEnabled&&state.gpsOrderId===orderId)){toast('📍 Live GPS is already active for this delivery.');return;}
+  stopDemo();stopGPS();state.gpsStarting=true;state.gpsOrderId=orderId;state.lastGpsSentAt=0;state.lastGpsSentPos=null;
+  const fail=err=>{
+    state.gpsStarting=false;stopGPS();
+    const msg=err.code===1?'Location permission is blocked. On iPhone: Settings → Privacy & Security → Location Services → Safari Websites → While Using + Precise Location. On Mac: System Settings → Privacy & Security → Location Services → Safari, then reload this site.':err.code===2?'The device cannot determine its position right now. Move outdoors or near a window and try again.':'GPS timed out. Try again on the driver phone with Location Services enabled.';
+    toast('📍 '+msg);render();
+  };
+  const handle=position=>{
+    state.gpsStarting=false;state.gpsEnabled=true;
+    const now=Date.now(),pos={lat:position.coords.latitude,lng:position.coords.longitude};
+    const moved=state.lastGpsSentPos?approxMeters(pos,state.lastGpsSentPos):Infinity;
+    if(now-state.lastGpsSentAt<1800 && moved<3)return;
+    state.lastGpsSentAt=now;state.lastGpsSentPos=pos;
+    updateLocation(orderId,pos.lat,pos.lng,'gps',{accuracy:position.coords.accuracy,heading:position.coords.heading,speed:position.coords.speed}).catch(e=>toast('GPS update failed: '+e.message));
+  };
+  // Get one precise fix first so the UI does not claim live tracking until the browser has actually returned coordinates.
+  navigator.geolocation.getCurrentPosition(first=>{
+    handle(first);
+    state.gpsWatchId=navigator.geolocation.watchPosition(handle,fail,{enableHighAccuracy:true,maximumAge:1000,timeout:25000});
+    render();toast(`🟢 Live rider GPS started${first.coords.accuracy?` (accuracy ±${Math.round(first.coords.accuracy)} m)`:''}. Keep this tab open while delivering.`);
+  },fail,{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+  render();toast('📍 Requesting a precise GPS fix from the driver device…');
 }
 async function takeAction(orderId,action){
   try{
@@ -668,17 +740,22 @@ function captureDraft(){
 }
 async function useCustomerGPS(){
   if(!navigator.geolocation){toast('Location is not available in this browser.');return;}
-  captureDraft();
+  captureDraft();toast('📍 Getting the most accurate device location…');
   navigator.geolocation.getCurrentPosition(pos=>{
-    state.draftLocation={id:'gps',name:'My GPS location',address:'My current GPS position, Tanauan',lat:pos.coords.latitude,lng:pos.coords.longitude};
-    if(!state.draftAddress||state.locations.some(l=>l.address===state.draftAddress))state.draftAddress='My current GPS location — add house and street';
-    renderModal();toast('📍 GPS pin added. Please check your delivery address.');
-  },err=>toast('Could not get location: '+err.message),{enableHighAccuracy:true,timeout:13000});
+    const accuracy=Number(pos.coords.accuracy)||null;
+    setCustomerPin(pos.coords.latitude,pos.coords.longitude,{accuracy,source:'gps'});
+    if(!state.draftAddress||state.locations.some(l=>l.address===state.draftAddress))state.draftAddress='';
+    if($('#delivery-address'))$('#delivery-address').value=state.draftAddress;
+    toast(accuracy&&accuracy>100?`📍 Location found, but accuracy is only ±${Math.round(accuracy)} m. Drag the pin to your exact house.`:`✓ Exact GPS pin set${accuracy?` (±${Math.round(accuracy)} m)`:''}.`);
+  },err=>{
+    const msg=err.code===1?'Location is still blocked. Safari permission AND macOS/iPhone Location Services must both allow this site.':'Could not get location: '+err.message;toast('📍 '+msg);
+  },{enableHighAccuracy:true,maximumAge:0,timeout:30000});
 }
+
 async function placeOrder(event){
   event.preventDefault();captureDraft();
   const name=state.draftName.trim(),address=state.draftAddress.trim(),loc=state.draftLocation;
-  if(!name||!address||!loc){toast('Provide your name and delivery location.');return;}
+  if(!name||!address||!loc||!Number.isFinite(Number(loc.lat))||!Number.isFinite(Number(loc.lng))){toast('Pin your exact delivery location on the map first.');return;}
   const submit=$('#checkout-form button[type="submit"]');if(submit)submit.disabled=true;
   try{
     const result=await api('/api/orders','POST',{
@@ -765,6 +842,8 @@ document.addEventListener('click',async event=>{
   if(element.dataset.adjust){captureDraft();modifyCart(element.dataset.product,Number(element.dataset.adjust));return;}
   if(element.dataset.action){element.disabled=true;await takeAction(element.dataset.id,element.dataset.action);return;}
   if(element.id==='use-customer-gps'){useCustomerGPS();return;}
+  if(element.id==='center-tanauan'){const c=state.market||{lat:14.08204,lng:121.14672};if(state.checkoutMap)state.checkoutMap.setView([c.lat,c.lng],15);return;}
+  if(element.hasAttribute('data-open-navigation')){const lat=element.dataset.lat,lng=element.dataset.lng;if(lat&&lng)window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(lat+','+lng)}&travelmode=driving`,'_blank','noopener');return;}
   if(element.hasAttribute('data-enable-notifications')){requestNotifications();return;}
   if(element.hasAttribute('data-set-store-gps')){setStoreGPS();return;}
   if(element.hasAttribute('data-start-demo')){await startSimulation(element.dataset.startDemo);return;}
@@ -787,10 +866,6 @@ document.addEventListener('change',event=>{
     if(nextStore===state.selectedStoreId)return;
     if(cartCount() && !window.confirm('Switch seller stores? Your current cart will be cleared so products are not mixed between sellers.')){event.target.value=state.selectedStoreId;return;}
     state.cart={};saveCart();state.selectedStoreId=nextStore;state.filter='All';state.search='';render();toast('🏪 Store selected');return;
-  }
-  if(event.target.id==='customer-neighborhood'){
-    captureDraft();const loc=state.locations.find(l=>l.id===event.target.value);
-    if(loc){state.draftLocation=loc;state.draftAddress=loc.address;if($('#delivery-address'))$('#delivery-address').value=loc.address;}
   }
 });
 function setStoreGPS(){

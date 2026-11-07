@@ -506,7 +506,7 @@ const server = http.createServer((req, res) => {
   const entry = PUBLIC_FILES[url.pathname];
   if (!entry) return error(res, 404, 'Not found');
   const [name, mime] = entry;
-  res.writeHead(200, { 'Content-Type': `${mime}; charset=utf-8`, 'X-Content-Type-Options': 'nosniff' });
+  res.writeHead(200, { 'Content-Type': `${mime}; charset=utf-8`, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0', 'Pragma': 'no-cache', 'Expires': '0' });
   const stream = fs.createReadStream(path.join(ROOT, name));
   stream.on('error', () => res.destroy());
   stream.pipe(res);

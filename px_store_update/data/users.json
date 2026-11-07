@@ -21,10 +21,10 @@
       "deliveryAddress": "123 Tester Street, Tanauan City"
     },
     "approvalStatus": "approved",
-    "salt": "0188364b96f1f1505b531d52f58ae913",
-    "passwordHash": "16ffb40c594cd5d213d2adde609c893ff6d22f8492ea3b450a683b12121a3682",
+    "salt": "3218a953a67b1b0d9c7528eaf3a9a8c8",
+    "passwordHash": "540c69dba1d4b72eada45105f348a8969b2e79130be2ef14a07ab584ee69ca96",
     "createdAt": "2026-10-27T14:46:57.977Z",
-    "passwordResetAt": "2026-10-29T13:23:46.623Z",
+    "passwordResetAt": "2026-10-31T03:48:23.497Z",
     "updatedAt": "2026-10-28T02:54:54.514Z"
   },
   {
@@ -149,10 +149,10 @@
         ]
       }
     },
-    "salt": "e482057f6a76cd9c6c6651b5509da476",
-    "passwordHash": "009a2662aef40666bee85a66ffb744f7a44def68bc643050def049b2e8b73dec",
+    "salt": "00036e970571f6e6318fd3f1c495098f",
+    "passwordHash": "3d1e842228c6af51120d78386ffd8ff9ac18c44403fe2ddefeb8c8a6f3d06884",
     "createdAt": "2026-10-27T14:46:58.046Z",
-    "passwordResetAt": "2026-10-29T13:23:46.680Z"
+    "passwordResetAt": "2026-10-31T03:48:23.544Z"
   },
   {
     "id": "769633a0-a283-49b8-8e43-5e1a0e003e87",
@@ -170,9 +170,9 @@
       "vehicleModel": "Honda Click 125",
       "orcrNumber": "TEST-ORCR-001"
     },
-    "salt": "2b13138f44c5677e2729c8df5ad7081c",
-    "passwordHash": "e1532f3d5d69bbbedd68773adab88b9fcc8cd1831391dfad70aca18a6c6d6b1c",
+    "salt": "2d12895e23a005e3be314897d7890f47",
+    "passwordHash": "5ebfb82f639545144d9358ef7044ee92db6f1eb1521ecff3a283835b770a04ef",
     "createdAt": "2026-10-27T14:46:58.110Z",
-    "passwordResetAt": "2026-10-29T13:23:46.725Z"
+    "passwordResetAt": "2026-10-31T03:48:23.591Z"
   }
 ]

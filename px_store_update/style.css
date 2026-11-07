@@ -41,3 +41,7 @@ body{background:#fff}
 .store-picker-meta{display:flex;gap:13px;flex-wrap:wrap;margin-top:10px;color:#788a80;font-size:10px}
 @media(max-width:950px){.side-rail{width:190px}}
 @media(max-width:700px){.side-rail{display:none}.store-picker-control{align-items:stretch;flex-direction:column}.store-picker-status{align-self:flex-start}.store-picker-meta{gap:8px 12px}}
+
+/* Exact customer pin + GPS accuracy */
+.location-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.checkout-pin-map{height:260px;width:100%;border:1px solid #dce7dd;border-radius:14px;overflow:hidden;background:#edf3ef;z-index:0}.pin-help{margin-top:8px;padding:10px 12px;border-radius:10px;background:#f4f8f4;color:#5d7566;font-size:10px;line-height:1.55}.pin-help strong{color:#234b38}.nav-maps-btn{margin-top:9px}.leaflet-container{font-family:'DM Sans',system-ui,sans-serif}
+.rider-map-icon{overflow:visible!important}.live-rider-marker{position:relative;width:46px;height:46px;display:grid;place-items:center}.rider-emoji{position:relative;z-index:2;font-size:29px;line-height:1;display:block;filter:drop-shadow(0 3px 4px #0005);transition:transform .25s ease}.rider-pulse{position:absolute;z-index:1;width:32px;height:32px;border-radius:999px;background:#2f80ed3b;border:2px solid #2f80ed;animation:rider-pulse 1.35s ease-out infinite}@keyframes rider-pulse{0%{transform:scale(.7);opacity:.9}70%{transform:scale(1.45);opacity:.15}100%{transform:scale(1.55);opacity:0}}
