@@ -198,29 +198,24 @@ const LOCATIONS = Object.freeze([
   { id: 'janopol', name: 'Janopol', address: 'Brgy. Janopol, Tanauan City', lat: 14.0696, lng: 121.1207 },
   { id: 'banadero', name: 'Bañadero', address: 'Brgy. Bañadero, Tanauan City', lat: 14.1048, lng: 121.1301 }
 ]);
-function wikimediaFileUrl(filename){
-  const normalized=String(filename).replace(/ /g,'_');
-  const hash=crypto.createHash('md5').update(normalized).digest('hex');
-  return `https://upload.wikimedia.org/wikipedia/commons/${hash[0]}/${hash.slice(0,2)}/${encodeURIComponent(normalized)}`;
-}
-const PRODUCT_PHOTOS = {
-  tomato: wikimediaFileUrl('Fresh tomatoes.jpg'),
-  pechay: wikimediaFileUrl('Bok Choy.JPG'),
-  carrot: wikimediaFileUrl('Fresh carrot.jpg'),
-  eggplant: wikimediaFileUrl('Philippine Eggplant.jpg'),
-  pork: wikimediaFileUrl('Pork Meat (Pili, Camarines Sur).jpg'),
-  chicken: wikimediaFileUrl('Raw chicken.jpg'),
-  tilapia: wikimediaFileUrl('Tilapia fishes in a typical Bangladeshi bazar.jpg'),
-  shrimp: wikimediaFileUrl('Fresh shrimps.jpg'),
-  mango: wikimediaFileUrl('Mango fruit.jpg'),
-  banana: wikimediaFileUrl('Banana fruit.jpeg'),
-  rice: wikimediaFileUrl('Rice grains.jpg'),
-  eggs: wikimediaFileUrl('Chicken eggs.jpg')
-};
+const PRODUCT_PHOTOS = Object.freeze({
+  tomato: '/assets/products/tomato.jpg',
+  pechay: '/assets/products/pechay.jpg',
+  carrot: '/assets/products/carrot.jpg',
+  eggplant: '/assets/products/eggplant.jpg',
+  pork: '/assets/products/pork.jpg',
+  chicken: '/assets/products/chicken.jpg',
+  tilapia: '/assets/products/tilapia.jpg',
+  shrimp: '/assets/products/shrimp.jpg',
+  mango: '/assets/products/mango.jpg',
+  banana: '/assets/products/banana.jpg',
+  rice: '/assets/products/rice.jpg',
+  eggs: '/assets/products/eggs.jpg'
+});
 function fallbackProductPhoto(category='', name=''){
   const key=(name+' '+category).toLowerCase();
   if(key.includes('tomato')) return PRODUCT_PHOTOS.tomato;
-  if(key.includes('pechay')||key.includes('leaf')||key.includes('green')) return PRODUCT_PHOTOS.pechay;
+  if(key.includes('pechay')||key.includes('bok choy')||key.includes('leaf')||key.includes('green')) return PRODUCT_PHOTOS.pechay;
   if(key.includes('carrot')) return PRODUCT_PHOTOS.carrot;
   if(key.includes('eggplant')) return PRODUCT_PHOTOS.eggplant;
   if(key.includes('pork')) return PRODUCT_PHOTOS.pork;
@@ -236,9 +231,18 @@ function fallbackProductPhoto(category='', name=''){
   if(category==='Meat') return PRODUCT_PHOTOS.pork;
   if(category==='Vegetables') return PRODUCT_PHOTOS.pechay;
   if(category==='Pantry') return PRODUCT_PHOTOS.rice;
-  return PRODUCT_PHOTOS.tomato;
+  return '/assets/product-placeholder.svg';
 }
-function productView(p){ const saved=clean(p.imageUrl,500); const isBrokenLegacy=!saved || /^assets\/products\//i.test(saved) || /loremflickr\.com/i.test(saved); const imageUrl=isBrokenLegacy ? fallbackProductPhoto(p.category,p.name) : saved; return {...p, imageUrl}; }
+function productView(p){
+  const saved=clean(p.imageUrl,500);
+  const known=fallbackProductPhoto(p.category,p.name);
+  // Always use packaged local photos for the built-in/tester products.
+  // Custom seller image URLs remain supported when the product name is not one of the known starter items.
+  const key=(String(p.name||'')+' '+String(p.category||'')).toLowerCase();
+  const isKnown=/tomato|pechay|bok choy|carrot|eggplant|pork|chicken|tilapia|shrimp|prawn|mango|banana|rice|egg/.test(key);
+  const imageUrl=isKnown ? known : (saved || known);
+  return {...p, imageUrl};
+}
 const PRODUCTS = Object.freeze([
   { id: 'tomato', name: 'Fresh Tomatoes', category: 'Vegetables', unit: '1 kg', price: 90, imageUrl: PRODUCT_PHOTOS.tomato, tone: '#fcefeb' },
   { id: 'pechay', name: 'Fresh Pechay', category: 'Vegetables', unit: '1 bundle', price: 35, imageUrl: PRODUCT_PHOTOS.pechay, tone: '#e8f5df' },
@@ -598,14 +602,33 @@ function orderResponse(req, res, url) {
   return error(res, 404, 'API endpoint not found.');
 }
 const PUBLIC_FILES = { '/': ['index.html', 'text/html'], '/index.html': ['index.html', 'text/html'], '/style.css': ['style.css', 'text/css'], '/app.js': ['app.js', 'text/javascript'] };
+const MIME_TYPES = Object.freeze({'.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.webp':'image/webp','.gif':'image/gif'});
+function serveAsset(res, pathname, method){
+  let decoded;
+  try { decoded=decodeURIComponent(pathname); } catch (_) { return error(res,400,'Bad asset path'); }
+  if(!decoded.startsWith('/assets/')) return false;
+  const rel=decoded.slice(1);
+  const file=path.resolve(ROOT,rel);
+  const assetsRoot=path.resolve(ROOT,'assets')+path.sep;
+  if(!file.startsWith(assetsRoot)) return error(res,403,'Forbidden');
+  if(!fs.existsSync(file) || !fs.statSync(file).isFile()) return error(res,404,'Asset not found');
+  const ext=path.extname(file).toLowerCase();
+  const mime=MIME_TYPES[ext]||'application/octet-stream';
+  res.writeHead(200,{'Content-Type':mime,'X-Content-Type-Options':'nosniff','Cache-Control':'public, max-age=3600'});
+  if(method==='HEAD') return res.end();
+  fs.createReadStream(file).on('error',()=>res.destroy()).pipe(res);
+  return true;
+}
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (url.pathname.startsWith('/api/')) return orderResponse(req, res, url);
   if (req.method !== 'GET' && req.method !== 'HEAD') return error(res, 405, 'Method not allowed');
+  if (url.pathname.startsWith('/assets/')) return serveAsset(res,url.pathname,req.method);
   const entry = PUBLIC_FILES[url.pathname];
   if (!entry) return error(res, 404, 'Not found');
   const [name, mime] = entry;
   res.writeHead(200, { 'Content-Type': `${mime}; charset=utf-8`, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0', 'Pragma': 'no-cache', 'Expires': '0' });
+  if(req.method==='HEAD') return res.end();
   const stream = fs.createReadStream(path.join(ROOT, name));
   stream.on('error', () => res.destroy());
   stream.pipe(res);

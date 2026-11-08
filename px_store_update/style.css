@@ -58,3 +58,7 @@ body{background:#fff}
 .side-rail{border-right:0!important}
 .product-photo-wrap{background:#eef4f0}
 .product-photo{background:#eef4f0}
+
+/* v12: local product assets + cleaner customer hero */
+.hero-art,.hero-circle{display:none!important;}
+.product-media img,.cart-thumb img,.order-item-thumb img{width:100%;height:100%;object-fit:cover;display:block;}

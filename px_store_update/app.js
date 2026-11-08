@@ -128,7 +128,7 @@ function storePicker(){
       <select id="store-select" aria-label="Choose seller store">${state.stores.map(s=>`<option value="${esc(s.id)}" ${s.id===state.selectedStoreId?'selected':''}>${s.isOpen?'🟢':'🔴'} ${esc(s.name)} — ${esc(s.location)}</option>`).join('')}</select>
       <span class="store-picker-status ${store?.isOpen?'open':'closed'}">${store?.isOpen?'OPEN NOW':'CLOSED'}</span>
     </div>
-    ${store?`<div class="store-picker-meta"><span>🏪 ${esc(store.ownerName)}</span><span>📍 ${esc(store.location)}</span><span>🧺 ${Number(store.productCount||0)} item(s)</span><span>🕒 ${esc(store.openReason||'')}</span></div>`:''}
+    ${store?`<div class="store-picker-meta"><span>${esc(store.ownerName)}</span><span>${esc(store.location)}</span><span>${Number(store.productCount||0)} item(s)</span><span>${esc(store.openReason||'')}</span></div>`:''}
   </div>`;
 }
 function selectedStoreProducts(){return state.products.filter(p=>p.sellerId===state.selectedStoreId);}
@@ -137,8 +137,8 @@ function shopPage(){
   const store=state.stores.find(x=>x.id===state.selectedStoreId);
   const storeProducts=selectedStoreProducts();
   const filtered=storeProducts.filter(p => (state.filter==='All'||p.category===state.filter) && (`${p.name} ${p.category}`).toLowerCase().includes(state.search.toLowerCase()));
-  return `${contentHead('WELCOME TO THE PALENGKE','Choose your seller store.','Every approved seller appears here as a separate store. Choose one to see only that seller’s items.',`<button class="btn btn-ghost" data-section="orders">📦 My orders (${selectedOrders().length})</button>`)}
-    <section class="shop-hero"><div class="hero-content"><div class="hero-kicker">✨ Approved local sellers</div><h2>Choose a store,<br>then shop its items.</h2><p>${state.stores.length} approved seller ${state.stores.length===1?'store is':'stores are'} currently listed.</p><span class="hero-chip">🛵 Fast delivery · Cash on Delivery</span></div><div class="hero-circle"></div><span class="hero-art" aria-hidden="true">🏪</span></section>
+  return `${contentHead('WELCOME TO THE PALENGKE','Choose your seller store.','Every approved seller appears here as a separate store. Choose one to see only that seller’s items.',`<button class="btn btn-ghost" data-section="orders">My orders (${selectedOrders().length})</button>`)}
+    <section class="shop-hero"><div class="hero-content"><div class="hero-kicker">Approved local sellers</div><h2>Choose a store,<br>then shop its items.</h2><p>${state.stores.length} approved seller ${state.stores.length===1?'store is':'stores are'} currently listed.</p><span class="hero-chip">Fast delivery · Cash on Delivery</span></div></section>
     ${storePicker()}
     ${store ? `
     ${!store.isOpen?`<div class="notice">This store is currently closed. You can browse its items, but checkout is disabled until the seller opens the store or the automatic opening time begins.</div>`:''}
@@ -146,7 +146,7 @@ function shopPage(){
     <div class="category-pills">${['All','Vegetables','Meat','Fish','Fruits','Pantry','Other'].map(c=>`<button class="pill ${c===state.filter?'active':''}" data-filter="${c}">${c==='All'?'🧺 ':''}${c}</button>`).join('')}</div>
     <div class="section-head"><div><h2>${esc(store.name)} items</h2><p id="products-count">${filtered.length} item(s) listed</p></div><div class="search-wrap">⌕ <input id="search-products" type="search" value="${esc(state.search)}" placeholder="Search this store…" aria-label="Search products"></div></div>
     <div class="product-grid" id="product-grid">${productCards(filtered,store)}</div>
-    ${cartCount() ? `<button class="cart-fab" data-open-cart>🛍️ View Cart <span class="cart-bubble">${cartCount()}</span> ${money(cartSubtotal())}</button>`:''}` : ''}`;
+    ${cartCount() ? `<button class="cart-fab" data-open-cart>View Cart <span class="cart-bubble">${cartCount()}</span> ${money(cartSubtotal())}</button>`:''}` : ''}`;
 }
 function productCards(products,store=state.stores.find(x=>x.id===state.selectedStoreId)){
   if (!products.length) return `<div style="grid-column:1/-1">${empty('No items in this store yet','This seller has not added matching products yet.','🧺')}</div>`;
@@ -839,7 +839,7 @@ document.addEventListener('click',async event=>{
   if(element.dataset.store){
     if(element.dataset.store===state.selectedStoreId)return;
     if(cartCount() && !window.confirm('Switch seller stores? Your current cart will be cleared so products are not mixed between sellers.'))return;
-    state.cart={};saveCart();state.selectedStoreId=element.dataset.store;state.filter='All';state.search='';render();toast('🏪 Store selected');return;
+    state.cart={};saveCart();state.selectedStoreId=element.dataset.store;state.filter='All';state.search='';render();toast('Store selected');return;
   }
   if(element.dataset.filter){state.filter=element.dataset.filter;render();return;}
   if(element.dataset.order){state.selectedOrderId=element.dataset.order;render();return;}
@@ -872,7 +872,7 @@ document.addEventListener('change',event=>{
     const nextStore=event.target.value;
     if(nextStore===state.selectedStoreId)return;
     if(cartCount() && !window.confirm('Switch seller stores? Your current cart will be cleared so products are not mixed between sellers.')){event.target.value=state.selectedStoreId;return;}
-    state.cart={};saveCart();state.selectedStoreId=nextStore;state.filter='All';state.search='';render();toast('🏪 Store selected');return;
+    state.cart={};saveCart();state.selectedStoreId=nextStore;state.filter='All';state.search='';render();toast('Store selected');return;
   }
 });
 function setStoreGPS(){
