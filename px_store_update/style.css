@@ -48,3 +48,13 @@ body{background:#fff}
 
 /* Real product photography */
 .product-photo-wrap{position:relative;overflow:hidden;padding:0!important;min-height:150px;background:#edf3ef}.product-photo{width:100%;height:170px;object-fit:cover;display:block;transition:transform .25s ease}.product-card:hover .product-photo{transform:scale(1.035)}.product-photo-wrap .fresh-tag{position:absolute;z-index:2;left:10px;top:10px;background:rgba(255,255,255,.92);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.8);box-shadow:0 3px 10px rgba(0,0,0,.08);font-size:9px}.seller-product-image,.cart-photo{width:48px;height:48px;border-radius:10px;overflow:hidden;background:#eef4f0}.seller-thumb,.cart-thumb,.order-thumb{width:100%;height:100%;object-fit:cover;display:block}.seller-product-row{grid-template-columns:48px minmax(0,1fr) auto auto}.item-line-photo>span{display:flex;align-items:center;gap:10px}.order-thumb{width:38px;height:38px;border-radius:9px;flex:0 0 38px}.cart-photo{flex:0 0 48px}.cart-row{align-items:center}@media(max-width:850px){.seller-product-row{grid-template-columns:48px minmax(0,1fr) auto}}
+
+/* One-piece logged-in layout: remove the empty left split and use full width. */
+.logged-in .side-rail{display:none!important}
+.logged-in .workspace{width:100%;max-width:none}
+.logged-in .topbar{padding-left:clamp(20px,4vw,60px)}
+.logged-in .mobile-brand{display:block!important;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;letter-spacing:-.7px}
+.logged-in .mobile-brand strong{color:#12845a}
+.side-rail{border-right:0!important}
+.product-photo-wrap{background:#eef4f0}
+.product-photo{background:#eef4f0}

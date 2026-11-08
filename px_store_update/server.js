@@ -198,19 +198,24 @@ const LOCATIONS = Object.freeze([
   { id: 'janopol', name: 'Janopol', address: 'Brgy. Janopol, Tanauan City', lat: 14.0696, lng: 121.1207 },
   { id: 'banadero', name: 'Bañadero', address: 'Brgy. Bañadero, Tanauan City', lat: 14.1048, lng: 121.1301 }
 ]);
+function wikimediaFileUrl(filename){
+  const normalized=String(filename).replace(/ /g,'_');
+  const hash=crypto.createHash('md5').update(normalized).digest('hex');
+  return `https://upload.wikimedia.org/wikipedia/commons/${hash[0]}/${hash.slice(0,2)}/${encodeURIComponent(normalized)}`;
+}
 const PRODUCT_PHOTOS = {
-  tomato: 'assets/products/tomato.jpg',
-  pechay: 'assets/products/pechay.jpg',
-  carrot: 'assets/products/carrot.jpg',
-  eggplant: 'assets/products/eggplant.jpg',
-  pork: 'assets/products/pork.jpg',
-  chicken: 'assets/products/chicken.jpg',
-  tilapia: 'assets/products/tilapia.jpg',
-  shrimp: 'assets/products/shrimp.jpg',
-  mango: 'assets/products/mango.jpg',
-  banana: 'assets/products/banana.jpg',
-  rice: 'assets/products/rice.jpg',
-  eggs: 'assets/products/eggs.jpg'
+  tomato: wikimediaFileUrl('Fresh tomatoes.jpg'),
+  pechay: wikimediaFileUrl('Bok Choy.JPG'),
+  carrot: wikimediaFileUrl('Fresh carrot.jpg'),
+  eggplant: wikimediaFileUrl('Philippine Eggplant.jpg'),
+  pork: wikimediaFileUrl('Pork Meat (Pili, Camarines Sur).jpg'),
+  chicken: wikimediaFileUrl('Raw chicken.jpg'),
+  tilapia: wikimediaFileUrl('Tilapia fishes in a typical Bangladeshi bazar.jpg'),
+  shrimp: wikimediaFileUrl('Fresh shrimps.jpg'),
+  mango: wikimediaFileUrl('Mango fruit.jpg'),
+  banana: wikimediaFileUrl('Banana fruit.jpeg'),
+  rice: wikimediaFileUrl('Rice grains.jpg'),
+  eggs: wikimediaFileUrl('Chicken eggs.jpg')
 };
 function fallbackProductPhoto(category='', name=''){
   const key=(name+' '+category).toLowerCase();
@@ -233,7 +238,7 @@ function fallbackProductPhoto(category='', name=''){
   if(category==='Pantry') return PRODUCT_PHOTOS.rice;
   return PRODUCT_PHOTOS.tomato;
 }
-function productView(p){ const saved=clean(p.imageUrl,500); const imageUrl=(!saved || /^https?:\/\//i.test(saved)) ? fallbackProductPhoto(p.category,p.name) : saved; return {...p, imageUrl}; }
+function productView(p){ const saved=clean(p.imageUrl,500); const isBrokenLegacy=!saved || /^assets\/products\//i.test(saved) || /loremflickr\.com/i.test(saved); const imageUrl=isBrokenLegacy ? fallbackProductPhoto(p.category,p.name) : saved; return {...p, imageUrl}; }
 const PRODUCTS = Object.freeze([
   { id: 'tomato', name: 'Fresh Tomatoes', category: 'Vegetables', unit: '1 kg', price: 90, imageUrl: PRODUCT_PHOTOS.tomato, tone: '#fcefeb' },
   { id: 'pechay', name: 'Fresh Pechay', category: 'Vegetables', unit: '1 bundle', price: 35, imageUrl: PRODUCT_PHOTOS.pechay, tone: '#e8f5df' },

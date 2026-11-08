@@ -272,6 +272,7 @@ function driverPage(){
 }
 function syncAuthChrome(){
   const loggedIn=!!authSession;
+  document.body.classList.toggle('logged-in',loggedIn);
   const roleRail=$('#role-rail');
   const mobileRoleTabs=$('#mobile-role-tabs');
   const railLabel=document.querySelector('.rail-label');
