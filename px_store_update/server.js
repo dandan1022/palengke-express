@@ -199,18 +199,18 @@ const LOCATIONS = Object.freeze([
   { id: 'banadero', name: 'Bañadero', address: 'Brgy. Bañadero, Tanauan City', lat: 14.1048, lng: 121.1301 }
 ]);
 const PRODUCT_PHOTOS = Object.freeze({
-  tomato: '/assets/products/tomato.jpg',
-  pechay: '/assets/products/pechay.jpg',
-  carrot: '/assets/products/carrot.jpg',
-  eggplant: '/assets/products/eggplant.jpg',
-  pork: '/assets/products/pork.jpg',
-  chicken: '/assets/products/chicken.jpg',
-  tilapia: '/assets/products/tilapia.jpg',
-  shrimp: '/assets/products/shrimp.jpg',
-  mango: '/assets/products/mango.jpg',
-  banana: '/assets/products/banana.jpg',
-  rice: '/assets/products/rice.jpg',
-  eggs: '/assets/products/eggs.jpg'
+  tomato: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Tomates_apilados_2.jpg',
+  pechay: 'https://upload.wikimedia.org/wikipedia/commons/6/61/Bokchoy.jpg',
+  carrot: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/CARROT.jpg',
+  eggplant: 'https://upload.wikimedia.org/wikipedia/commons/2/27/Philippine_Eggplant.jpg',
+  pork: 'https://assets.landers.ph/catalog/product/8/0/800009-02_1.jpg',
+  chicken: 'https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy%2Cf_auto%2Cq_auto/FOOD_CATALOG/IMAGES/CMS/2025/10/7/cc544428-7e3a-4170-a602-901cb80b84de_52ea567e-9899-454a-af23-1a61bbfdce72.jpg',
+  tilapia: 'https://zeevruchtengids.org/sites/zeevruchtengids.org/files/styles/social_share_image/public/soort/talipia.jpg?h=e15132cc&itok=9QlYQyF5',
+  shrimp: 'https://tepbac.com/upload/news/ge_image/2025/11/tom-the%2811%29_1762354570.jpg',
+  mango: 'https://upload.wikimedia.org/wikipedia/commons/c/c0/Mango_%281%29.jpg',
+  banana: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banana-Single.jpg/1280px-Banana-Single.jpg',
+  rice: 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Ricegrains1100ppx.jpg',
+  eggs: 'https://img.wattagnet.com/files/base/wattglobalmedia/all/image/2023/07/three_brown_eggs.64b95462858a8.png?auto=format%2Ccompress&h=630&q=70&w=1200'
 });
 function fallbackProductPhoto(category='', name=''){
   const key=(name+' '+category).toLowerCase();
