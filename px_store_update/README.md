@@ -134,11 +134,21 @@ Deleting an account removes it from the local account database and invalidates a
 
 ## Tester accounts
 
-These development tester accounts are recreated when the server starts and are already approved:
+These development tester accounts are recreated when the server starts and are already approved. All tester accounts use the password `Abc123!`.
 
-- Customer: `customer@example.test` / `Abc123!`
-- Seller: `seller@example.test` / `Abc123!`
-- Driver: `driver@example.test` / `Abc123!`
+- Customer: `customer@example.test`
+
+Seller testers:
+- `seller@example.test` — Tester Fresh Market Stall
+- `seller2@example.test` — Santos Gulay at Prutas
+- `seller3@example.test` — Reyes Fresh Meat Shop
+- `seller4@example.test` — Cruz Seafood & Pantry
+
+Driver testers:
+- `driver@example.test` — Driver Tester
+- `driver2@example.test` — Rider Carlo
+- `driver3@example.test` — Rider Miguel
+- `driver4@example.test` — Rider Joshua
 
 They are for local/demo testing only. Do not use these fixed credentials in production.
 
@@ -202,3 +212,11 @@ For security, passwords are stored only as one-way hashes and are not written to
 
 ## Customer delivery notifications
 The Customer POV now sends an in-app notification for every delivery milestone and, when browser notification permission is enabled, a browser notification too. Milestones include seller confirmation, delivery rider assignment, order pickup, order on the way, rider nearby, and delivered. Notifications are derived from order history so rapid status changes do not skip intermediate alerts.
+
+## Real product photos update
+- Customer product cards now use real photo thumbnails instead of fruit/vegetable/meat/fish emojis.
+- Cart rows, order item lists, and Seller inventory use the same product photos.
+- Default demo products include real-photo URLs for tomatoes, pechay/leafy greens, carrots, eggplant, pork, chicken, tilapia, shrimp, mangoes, bananas, rice, and eggs.
+- Seller **Add item** now has an optional **Product image URL** field instead of an Emoji field.
+- If the Seller leaves the image URL blank, the app assigns a real product/category photo automatically.
+- Photos are loaded from an online image service, so internet access is required for the thumbnails.

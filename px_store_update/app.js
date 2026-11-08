@@ -3,6 +3,8 @@
 const $ = s => document.querySelector(s);
 const money = n => '₱' + Number(n || 0).toLocaleString('en-PH', { maximumFractionDigits: 0 });
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+function productPhoto(p){return esc(p?.imageUrl||'https://loremflickr.com/800/600/fresh-food,market?lock=125');}
+function productThumb(p,cls='product-photo'){return `<img class="${cls}" src="${productPhoto(p)}" alt="${esc(p?.name||'Product')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://loremflickr.com/800/600/fresh-food,market?lock=125'">`; }
 const STATUS_NAMES = { pending:'New Order', accepted:'Accepted', ready:'Ready for Pickup', awaiting_driver:'Booking Driver', driver_assigned:'Driver Assigned', picked_up:'Picked Up', en_route:'Out for Delivery', delivered:'Delivered', rejected:'Rejected' };
 const STATUS_DETAILS = { pending:'Waiting for the market seller to accept', accepted:'Seller is preparing your groceries', ready:'Groceries are packed and ready', awaiting_driver:'Seller booked a driver; awaiting rider acceptance', driver_assigned:'Driver accepted the booking and is coming to the market', picked_up:'Driver collected your order at the market', en_route:'Driver is heading to your delivery address', delivered:'Successfully delivered to the customer', rejected:'The seller could not fulfill this order' };
 const STAGES = ['pending','accepted','ready','awaiting_driver','driver_assigned','picked_up','en_route','delivered'];
@@ -93,7 +95,7 @@ function detailPanel(order){
     <div class="detail-row"><span>Seller pickup</span><strong>${esc(order.storeLocation||'Tanauan City Public Market')}</strong></div>
     ${order.rider ? `<div class="detail-row"><span>Assigned rider</span><strong>${esc(order.rider.name)} ${order.status==='awaiting_driver'?'(not yet accepted)':''}</strong></div>` : ''}
     ${order.notes ? `<div class="delivery-note">📝 Customer note: ${esc(order.notes)}</div>` : ''}
-    <div class="small-label">Order items</div><div class="item-list">${order.items.map(i => `<div class="item-line"><span>${esc(i.emoji)} ${esc(i.name)} × ${i.quantity}</span><strong>${money(i.price*i.quantity)}</strong></div>`).join('')}</div>
+    <div class="small-label">Order items</div><div class="item-list">${order.items.map(i => `<div class="item-line item-line-photo"><span>${productThumb(i,'order-thumb')}<span>${esc(i.name)} × ${i.quantity}</span></span><strong>${money(i.price*i.quantity)}</strong></div>`).join('')}</div>
     <div class="detail-row"><span>Items subtotal</span><strong>${money(order.subtotal)}</strong></div>
     <div class="detail-row"><span>Delivery fee</span><strong>${money(order.deliveryFee)}</strong></div>
     <div class="detail-row" style="font-size:15px"><strong>Total · COD</strong><strong style="font-size:17px;color:#157b52">${money(order.total)}</strong></div>
@@ -148,7 +150,7 @@ function shopPage(){
 function productCards(products,store=state.stores.find(x=>x.id===state.selectedStoreId)){
   if (!products.length) return `<div style="grid-column:1/-1">${empty('No items in this store yet','This seller has not added matching products yet.','🧺')}</div>`;
   return products.map(p=>{const inStock=Number(p.stock)>0,canBuy=inStock&&store?.isOpen;return `<article class="product-card ${canBuy?'':'product-disabled'}">
-    <div class="product-art" style="--tone:${p.tone||'#eef7f1'}"><span class="fresh-tag">${inStock?'● IN STOCK':'● SOLD OUT'}</span><span aria-hidden="true">${esc(p.emoji||'🧺')}</span></div>
+    <div class="product-art product-photo-wrap" style="--tone:${p.tone||'#eef7f1'}"><span class="fresh-tag">${inStock?'IN STOCK':'SOLD OUT'}</span>${productThumb(p)}</div>
     <div class="category">${esc(p.category)}</div><h3>${esc(p.name)}</h3><div class="unit">${esc(p.unit)} · Stock: ${Number(p.stock||0)}</div>
     <div class="product-foot"><strong class="price">${money(p.price)}</strong><button type="button" class="add-btn" data-add="${p.id}" ${canBuy?'':'disabled'} aria-label="Add ${esc(p.name)} to cart">${canBuy?'+':'×'}</button></div>
   </article>`}).join('');
@@ -171,12 +173,12 @@ function sellerInventoryPanel(){
     <div class="panel"><div class="panel-heading"><div><h2>Add item</h2><p class="panel-subtitle">Add something you currently sell.</p></div></div>
       <form id="add-product-form"><div class="field-grid two"><div class="field"><label>Item name</label><input name="name" required maxlength="100" placeholder="e.g. Fresh Tomatoes"></div><div class="field"><label>Category</label><select name="category"><option>Vegetables</option><option>Meat</option><option>Fish</option><option>Fruits</option><option>Pantry</option><option>Other</option></select></div></div>
       <div class="field-grid two"><div class="field"><label>Price (₱)</label><input name="price" type="number" min="1" step="1" required></div><div class="field"><label>Stock quantity</label><input name="stock" type="number" min="0" step="1" required></div></div>
-      <div class="field-grid two"><div class="field"><label>Unit</label><input name="unit" required placeholder="1 kg / 1 bundle / piece"></div><div class="field"><label>Emoji</label><input name="emoji" maxlength="8" value="🧺"></div></div>
+      <div class="field-grid two"><div class="field"><label>Unit</label><input name="unit" required placeholder="1 kg / 1 bundle / piece"></div><div class="field"><label>Product image URL (optional)</label><input name="imageUrl" type="url" maxlength="500" placeholder="https://example.com/product.jpg"></div></div><p class="inline-note">If left blank, Palengke Express will use a real product photo based on the item/category.</p>
       <button class="btn btn-primary" type="submit">+ Add item</button></form>
     </div>
   </div>
   <div class="panel seller-products-panel"><div class="panel-heading"><div><h2>My store items</h2><p class="panel-subtitle">Edit price/stock or remove items. Customers see these changes live.</p></div><span class="count-chip">${state.products.length} items</span></div>
-    ${state.products.length?`<div class="seller-product-list">${state.products.map(p=>`<div class="seller-product-row"><div class="seller-product-emoji">${esc(p.emoji||'🧺')}</div><div><strong>${esc(p.name)}</strong><small>${esc(p.category)} · ${esc(p.unit)} · Stock ${Number(p.stock||0)}</small></div><strong>${money(p.price)}</strong><div class="seller-product-actions"><button class="mini-action" data-edit-product="${p.id}">Edit</button><button class="mini-action reject" data-remove-product="${p.id}" data-product-name="${esc(p.name)}">Remove</button></div></div>`).join('')}</div>`:empty('No items yet','Use “Add item” above to create your store catalog.','🧺')}
+    ${state.products.length?`<div class="seller-product-list">${state.products.map(p=>`<div class="seller-product-row"><div class="seller-product-image">${productThumb(p,'seller-thumb')}</div><div><strong>${esc(p.name)}</strong><small>${esc(p.category)} · ${esc(p.unit)} · Stock ${Number(p.stock||0)}</small></div><strong>${money(p.price)}</strong><div class="seller-product-actions"><button class="mini-action" data-edit-product="${p.id}">Edit</button><button class="mini-action reject" data-remove-product="${p.id}" data-product-name="${esc(p.name)}">Remove</button></div></div>`).join('')}</div>`:empty('No items yet','Use “Add item” above to create your store catalog.','🧺')}
   </div>`;
 }
 function customerOrdersPage(){
@@ -328,7 +330,7 @@ function cartModal(){
   const cart=state.products.filter(p=>state.cart[p.id]>0);
   return `<div class="overlay" id="cart-overlay"><div class="modal-card" role="dialog" aria-modal="true" aria-label="Your shopping cart">
     <div class="modal-header"><div><div class="eyebrow">READY TO CHECK OUT?</div><h2 style="margin-top:5px">Your market basket</h2></div><button type="button" class="close-btn" data-close-cart aria-label="Close cart">×</button></div>
-    ${cart.length ? `<div>${cart.map(p=>`<div class="cart-row"><div class="cart-emoji">${p.emoji}</div><div class="cart-info"><strong>${esc(p.name)}</strong><small>${money(p.price)} · ${p.unit}</small></div><div class="qty"><button type="button" data-adjust="-1" data-product="${p.id}" aria-label="Remove one">−</button><span>${state.cart[p.id]}</span><button type="button" data-adjust="1" data-product="${p.id}" aria-label="Add one">+</button></div></div>`).join('')}</div>
+    ${cart.length ? `<div>${cart.map(p=>`<div class="cart-row"><div class="cart-photo">${productThumb(p,'cart-thumb')}</div><div class="cart-info"><strong>${esc(p.name)}</strong><small>${money(p.price)} · ${p.unit}</small></div><div class="qty"><button type="button" data-adjust="-1" data-product="${p.id}" aria-label="Remove one">−</button><span>${state.cart[p.id]}</span><button type="button" data-adjust="1" data-product="${p.id}" aria-label="Add one">+</button></div></div>`).join('')}</div>
       <form id="checkout-form">
       <div class="field"><label for="customer-name">Your name</label><input id="customer-name" name="customerName" type="text" maxlength="70" value="${esc(state.draftName)}" placeholder="Juan Dela Cruz" required></div>
       <div class="field"><label>Exact delivery pin</label><div class="location-actions"><button type="button" class="btn btn-ghost btn-small" id="use-customer-gps">📍 Use my device GPS</button><button type="button" class="btn btn-ghost btn-small" id="center-tanauan">⌖ Center Tanauan</button></div>
@@ -877,7 +879,7 @@ function setStoreGPS(){
 }
 async function addSellerProduct(event){
   event.preventDefault();const f=event.target;const button=f.querySelector('[type="submit"]');button.disabled=true;
-  try{await api('/api/seller/products','POST',{name:f.name.value.trim(),category:f.category.value,price:Number(f.price.value),stock:Number(f.stock.value),unit:f.unit.value.trim(),emoji:f.emoji.value.trim()||'🧺'});f.reset();toast('✓ Item added to your store.');}catch(err){toast('⚠ '+err.message);button.disabled=false;}
+  try{await api('/api/seller/products','POST',{name:f.name.value.trim(),category:f.category.value,price:Number(f.price.value),stock:Number(f.stock.value),unit:f.unit.value.trim(),imageUrl:f.imageUrl.value.trim()});f.reset();toast('✓ Item added to your store.');}catch(err){toast('⚠ '+err.message);button.disabled=false;}
 }
 async function saveStoreSettings(event){
   event.preventDefault();const f=event.target;const days=[...f.querySelectorAll('input[name="days"]:checked')].map(x=>Number(x.value));const button=f.querySelector('[type="submit"]');button.disabled=true;

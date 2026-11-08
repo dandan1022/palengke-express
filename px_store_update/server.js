@@ -61,6 +61,51 @@ function ensureTesterAccounts(){
         licenseNumber:'TEST-LICENSE-001', licenseType:'Professional', licenseExpiry:'2028-12-31',
         motorcycleType:'Motorcycle', plateNumber:'TEST-123', vehicleModel:'Honda Click 125', orcrNumber:'TEST-ORCR-001'
       }
+    },
+    {
+      role:'seller', name:'Maria Santos', email:'seller2@example.test', phone:'09181234568', approvalStatus:'approved',
+      profile:{
+        storeName:'Santos Gulay at Prutas', storeLocation:'Tanauan City Public Market',
+        registrationType:'DTI', registrationNumber:'TEST-DTI-002', tin:'TEST-TIN-002',
+        businessPermit:'TEST-PERMIT-002', validIdType:'PhilSys ID', validIdNumber:'TEST-ID-SELLER-002'
+      }
+    },
+    {
+      role:'seller', name:'Pedro Reyes', email:'seller3@example.test', phone:'09181234569', approvalStatus:'approved',
+      profile:{
+        storeName:'Reyes Fresh Meat Shop', storeLocation:'Tanauan City Public Market',
+        registrationType:'DTI', registrationNumber:'TEST-DTI-003', tin:'TEST-TIN-003',
+        businessPermit:'TEST-PERMIT-003', validIdType:'Driver License', validIdNumber:'TEST-ID-SELLER-003'
+      }
+    },
+    {
+      role:'seller', name:'Ana Cruz', email:'seller4@example.test', phone:'09181234570', approvalStatus:'approved',
+      profile:{
+        storeName:'Cruz Seafood & Pantry', storeLocation:'Tanauan City Public Market',
+        registrationType:'DTI', registrationNumber:'TEST-DTI-004', tin:'TEST-TIN-004',
+        businessPermit:'TEST-PERMIT-004', validIdType:'PhilSys ID', validIdNumber:'TEST-ID-SELLER-004'
+      }
+    },
+    {
+      role:'driver', name:'Rider Carlo', email:'driver2@example.test', phone:'09191234568', approvalStatus:'approved',
+      profile:{
+        licenseNumber:'TEST-LICENSE-002', licenseType:'Professional', licenseExpiry:'2029-06-30',
+        motorcycleType:'Motorcycle', plateNumber:'DRV-202', vehicleModel:'Yamaha Mio i125', orcrNumber:'TEST-ORCR-002'
+      }
+    },
+    {
+      role:'driver', name:'Rider Miguel', email:'driver3@example.test', phone:'09191234569', approvalStatus:'approved',
+      profile:{
+        licenseNumber:'TEST-LICENSE-003', licenseType:'Professional', licenseExpiry:'2029-09-30',
+        motorcycleType:'Motorcycle', plateNumber:'DRV-303', vehicleModel:'Honda Beat', orcrNumber:'TEST-ORCR-003'
+      }
+    },
+    {
+      role:'driver', name:'Rider Joshua', email:'driver4@example.test', phone:'09191234570', approvalStatus:'approved',
+      profile:{
+        licenseNumber:'TEST-LICENSE-004', licenseType:'Professional', licenseExpiry:'2030-01-31',
+        motorcycleType:'Motorcycle', plateNumber:'DRV-404', vehicleModel:'Suzuki Burgman Street', orcrNumber:'TEST-ORCR-004'
+      }
     }
   ];
   let changed=false;
@@ -87,9 +132,17 @@ function ensureSellerCommerce(seller){
   seller.profile = seller.profile || {};
   let changed=false;
   if(!Array.isArray(seller.profile.products)){
-    seller.profile.products = seller.email==='seller@example.test'
-      ? PRODUCTS.slice(0,8).map((p,i)=>({...p,id:`${seller.id.slice(0,8)}-${p.id}`,stock:20+i*3,active:true}))
-      : [];
+    const starterSets={
+      'seller@example.test':[0,1,2,3,4,5,6,7],
+      'seller2@example.test':[0,1,2,3,8,9],
+      'seller3@example.test':[4,5,11],
+      'seller4@example.test':[6,7,10,11]
+    };
+    const indexes=starterSets[seller.email] || [];
+    seller.profile.products = indexes.map((idx,i)=>{
+      const p=PRODUCTS[idx];
+      return {...p,id:`${seller.id.slice(0,8)}-${p.id}`,stock:18+i*4,active:true};
+    });
     changed=true;
   }
   if(!seller.profile.storeSettings || typeof seller.profile.storeSettings!=='object'){
@@ -121,7 +174,7 @@ function storeOpenInfo(seller){
 function sellerProducts(seller){ ensureSellerCommerce(seller); return seller.profile.products.filter(p=>p && p.active!==false); }
 function approvedStores(){ return users.filter(u=>u.role==='seller' && (u.approvalStatus||'pending')==='approved').map(u=>{const open=storeOpenInfo(u),products=sellerProducts(u),coords=validateLocation(u.profile?.storeCoordinates)||MARKET;return {id:u.id,name:u.profile?.storeName||u.name,ownerName:u.name,location:u.profile?.storeLocation||'Tanauan City Public Market',coordinates:coords,hasExactLocation:!!validateLocation(u.profile?.storeCoordinates),phone:u.phone||'',createdAt:u.createdAt||'',isOpen:open.isOpen,openReason:open.reason,productCount:products.filter(p=>Number(p.stock)>0).length,storeSettings:u.profile.storeSettings};}); }
 function productsForUser(user){
-  if(user.role==='seller'){ensureSellerCommerce(user);return user.profile.products.map(p=>({...p,sellerId:user.id}));}
+  if(user.role==='seller'){ensureSellerCommerce(user);return user.profile.products.map(p=>({...productView(p),sellerId:user.id}));}
   if(user.role==='customer') return users.filter(u=>u.role==='seller'&&(u.approvalStatus||'pending')==='approved').flatMap(u=>sellerProducts(u).map(p=>({...p,sellerId:u.id})));
   return [];
 }
@@ -145,21 +198,58 @@ const LOCATIONS = Object.freeze([
   { id: 'janopol', name: 'Janopol', address: 'Brgy. Janopol, Tanauan City', lat: 14.0696, lng: 121.1207 },
   { id: 'banadero', name: 'Bañadero', address: 'Brgy. Bañadero, Tanauan City', lat: 14.1048, lng: 121.1301 }
 ]);
+const PRODUCT_PHOTOS = {
+  tomato: 'https://loremflickr.com/800/600/tomato,fresh?lock=101',
+  pechay: 'https://loremflickr.com/800/600/leafy-greens,vegetable?lock=102',
+  carrot: 'https://loremflickr.com/800/600/carrot,vegetable?lock=103',
+  eggplant: 'https://loremflickr.com/800/600/eggplant,vegetable?lock=104',
+  pork: 'https://loremflickr.com/800/600/pork,raw-meat?lock=105',
+  chicken: 'https://loremflickr.com/800/600/chicken,raw-meat?lock=106',
+  tilapia: 'https://loremflickr.com/800/600/tilapia,fish?lock=107',
+  shrimp: 'https://loremflickr.com/800/600/shrimp,seafood?lock=108',
+  mango: 'https://loremflickr.com/800/600/mango,fruit?lock=109',
+  banana: 'https://loremflickr.com/800/600/banana,fruit?lock=110',
+  rice: 'https://loremflickr.com/800/600/rice,grain?lock=111',
+  eggs: 'https://loremflickr.com/800/600/eggs,food?lock=112'
+};
+function fallbackProductPhoto(category='', name=''){
+  const key=(name+' '+category).toLowerCase();
+  if(key.includes('tomato')) return PRODUCT_PHOTOS.tomato;
+  if(key.includes('pechay')||key.includes('leaf')||key.includes('green')) return PRODUCT_PHOTOS.pechay;
+  if(key.includes('carrot')) return PRODUCT_PHOTOS.carrot;
+  if(key.includes('eggplant')) return PRODUCT_PHOTOS.eggplant;
+  if(key.includes('pork')) return PRODUCT_PHOTOS.pork;
+  if(key.includes('chicken')) return PRODUCT_PHOTOS.chicken;
+  if(key.includes('tilapia')||key.includes('fish')) return PRODUCT_PHOTOS.tilapia;
+  if(key.includes('shrimp')||key.includes('prawn')) return PRODUCT_PHOTOS.shrimp;
+  if(key.includes('mango')) return PRODUCT_PHOTOS.mango;
+  if(key.includes('banana')) return PRODUCT_PHOTOS.banana;
+  if(key.includes('rice')) return PRODUCT_PHOTOS.rice;
+  if(key.includes('egg')) return PRODUCT_PHOTOS.eggs;
+  if(category==='Fruits') return 'https://loremflickr.com/800/600/fresh-fruit,market?lock=120';
+  if(category==='Fish') return 'https://loremflickr.com/800/600/fresh-fish,market?lock=121';
+  if(category==='Meat') return 'https://loremflickr.com/800/600/fresh-meat,market?lock=122';
+  if(category==='Vegetables') return 'https://loremflickr.com/800/600/fresh-vegetables,market?lock=123';
+  if(category==='Pantry') return 'https://loremflickr.com/800/600/groceries,pantry?lock=124';
+  return 'https://loremflickr.com/800/600/fresh-food,market?lock=125';
+}
+function productView(p){ return {...p, imageUrl: clean(p.imageUrl,500) || fallbackProductPhoto(p.category,p.name)}; }
 const PRODUCTS = Object.freeze([
-  { id: 'tomato', name: 'Fresh Tomatoes', category: 'Vegetables', unit: '1 kg', price: 90, emoji: '🍅', tone: '#fcefeb' },
-  { id: 'pechay', name: 'Fresh Pechay', category: 'Vegetables', unit: '1 bundle', price: 35, emoji: '🥬', tone: '#e8f5df' },
-  { id: 'carrot', name: 'Carrots', category: 'Vegetables', unit: '1 kg', price: 100, emoji: '🥕', tone: '#fff1df' },
-  { id: 'eggplant', name: 'Eggplant', category: 'Vegetables', unit: '1 kg', price: 85, emoji: '🍆', tone: '#eeeaf7' },
-  { id: 'pork', name: 'Pork Kasim', category: 'Meat', unit: '1 kg', price: 330, emoji: '🥩', tone: '#faecea' },
-  { id: 'chicken', name: 'Fresh Chicken', category: 'Meat', unit: '1 kg', price: 210, emoji: '🍗', tone: '#fff3e5' },
-  { id: 'tilapia', name: 'Fresh Tilapia', category: 'Fish', unit: '1 kg', price: 160, emoji: '🐟', tone: '#e6f3fc' },
-  { id: 'shrimp', name: 'Fresh Shrimp', category: 'Fish', unit: '500 g', price: 230, emoji: '🦐', tone: '#fff0e9' },
-  { id: 'mango', name: 'Sweet Mangoes', category: 'Fruits', unit: '1 kg', price: 180, emoji: '🥭', tone: '#fff4d9' },
-  { id: 'banana', name: 'Saba Bananas', category: 'Fruits', unit: '1 bunch', price: 85, emoji: '🍌', tone: '#fdf8df' },
-  { id: 'rice', name: 'Premium Rice', category: 'Pantry', unit: '1 kg', price: 58, emoji: '🍚', tone: '#f2f1eb' },
-  { id: 'eggs', name: 'Farm Fresh Eggs', category: 'Pantry', unit: '6 pieces', price: 60, emoji: '🥚', tone: '#fff1de' }
+  { id: 'tomato', name: 'Fresh Tomatoes', category: 'Vegetables', unit: '1 kg', price: 90, imageUrl: PRODUCT_PHOTOS.tomato, tone: '#fcefeb' },
+  { id: 'pechay', name: 'Fresh Pechay', category: 'Vegetables', unit: '1 bundle', price: 35, imageUrl: PRODUCT_PHOTOS.pechay, tone: '#e8f5df' },
+  { id: 'carrot', name: 'Carrots', category: 'Vegetables', unit: '1 kg', price: 100, imageUrl: PRODUCT_PHOTOS.carrot, tone: '#fff1df' },
+  { id: 'eggplant', name: 'Eggplant', category: 'Vegetables', unit: '1 kg', price: 85, imageUrl: PRODUCT_PHOTOS.eggplant, tone: '#eeeaf7' },
+  { id: 'pork', name: 'Pork Kasim', category: 'Meat', unit: '1 kg', price: 330, imageUrl: PRODUCT_PHOTOS.pork, tone: '#faecea' },
+  { id: 'chicken', name: 'Fresh Chicken', category: 'Meat', unit: '1 kg', price: 210, imageUrl: PRODUCT_PHOTOS.chicken, tone: '#fff3e5' },
+  { id: 'tilapia', name: 'Fresh Tilapia', category: 'Fish', unit: '1 kg', price: 160, imageUrl: PRODUCT_PHOTOS.tilapia, tone: '#e6f3fc' },
+  { id: 'shrimp', name: 'Fresh Shrimp', category: 'Fish', unit: '500 g', price: 230, imageUrl: PRODUCT_PHOTOS.shrimp, tone: '#fff0e9' },
+  { id: 'mango', name: 'Sweet Mangoes', category: 'Fruits', unit: '1 kg', price: 180, imageUrl: PRODUCT_PHOTOS.mango, tone: '#fff4d9' },
+  { id: 'banana', name: 'Saba Bananas', category: 'Fruits', unit: '1 bunch', price: 85, imageUrl: PRODUCT_PHOTOS.banana, tone: '#fdf8df' },
+  { id: 'rice', name: 'Premium Rice', category: 'Pantry', unit: '1 kg', price: 58, imageUrl: PRODUCT_PHOTOS.rice, tone: '#f2f1eb' },
+  { id: 'eggs', name: 'Farm Fresh Eggs', category: 'Pantry', unit: '6 pieces', price: 60, imageUrl: PRODUCT_PHOTOS.eggs, tone: '#fff1de' }
 ]);
 const DELIVERY_FEE = 40;
+
 const RIDER = Object.freeze({ id: 'rider-marco', name: 'Marco Santos', vehicle: 'Motorcycle' });
 const STATUS = ['pending', 'accepted', 'ready', 'awaiting_driver', 'driver_assigned', 'picked_up', 'en_route', 'delivered', 'rejected'];
 const ACTIONS = {
@@ -336,10 +426,10 @@ function orderResponse(req, res, url) {
   if(req.method==='POST' && url.pathname==='/api/seller/products') return parseBody(req).then(body=>{
     if(user.role!=='seller') return error(res,403,'Seller access required.');
     ensureSellerCommerce(user);
-    const name=clean(body.name,100),category=clean(body.category,40),unit=clean(body.unit,40),emoji=clean(body.emoji,8)||'🧺';
+    const name=clean(body.name,100),category=clean(body.category,40),unit=clean(body.unit,40),imageUrl=clean(body.imageUrl,500);
     const price=Number(body.price),stock=Number(body.stock);
     if(!name||!category||!unit||!Number.isFinite(price)||price<=0||price>100000||!Number.isInteger(stock)||stock<0||stock>100000) return error(res,400,'Enter a valid product name, category, unit, price and stock.');
-    const product={id:crypto.randomUUID(),name,category,unit,price:Math.round(price*100)/100,stock,emoji,tone:'#eef7f1',active:true,createdAt:new Date().toISOString()};
+    const product={id:crypto.randomUUID(),name,category,unit,price:Math.round(price*100)/100,stock,imageUrl:imageUrl||fallbackProductPhoto(category,name),tone:'#eef7f1',active:true,createdAt:new Date().toISOString()};
     user.profile.products.unshift(product);saveUsers();sheetEvent('seller_product_added',user,{productId:product.id,productName:name,price:product.price,stock});broadcast();
     return respond(res,201,{product});
   }).catch(e=>error(res,400,e.message));
@@ -352,7 +442,7 @@ function orderResponse(req, res, url) {
     if(body.name!==undefined){const v=clean(body.name,100);if(!v)return error(res,400,'Product name is required.');product.name=v;}
     if(body.category!==undefined) product.category=clean(body.category,40)||product.category;
     if(body.unit!==undefined) product.unit=clean(body.unit,40)||product.unit;
-    if(body.emoji!==undefined) product.emoji=clean(body.emoji,8)||'🧺';
+    if(body.imageUrl!==undefined) product.imageUrl=clean(body.imageUrl,500)||fallbackProductPhoto(product.category,product.name);
     if(body.price!==undefined){const v=Number(body.price);if(!Number.isFinite(v)||v<=0||v>100000)return error(res,400,'Invalid price.');product.price=Math.round(v*100)/100;}
     if(body.stock!==undefined){const v=Number(body.stock);if(!Number.isInteger(v)||v<0||v>100000)return error(res,400,'Invalid stock.');product.stock=v;}
     product.updatedAt=new Date().toISOString();saveUsers();sheetEvent('seller_product_updated',user,{productId:product.id,productName:product.name,price:product.price,stock:product.stock});broadcast();return respond(res,200,{product});
@@ -417,7 +507,7 @@ function orderResponse(req, res, url) {
         if (found) {
           found.quantity += qty;
           if (found.quantity > 50) return error(res, 400, 'Too many items of one product.');
-        } else items.push({ productId: product.id, name: product.name, emoji: product.emoji, unit: product.unit, quantity: qty, price: product.price });
+        } else items.push({ productId: product.id, name: product.name, imageUrl: productView(product).imageUrl, unit: product.unit, quantity: qty, price: product.price });
       }
       const subtotal = items.reduce((n, i) => n + i.price * i.quantity, 0);
       const now = new Date().toISOString();

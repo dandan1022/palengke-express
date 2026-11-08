@@ -21,10 +21,10 @@
       "deliveryAddress": "123 Tester Street, Tanauan City"
     },
     "approvalStatus": "approved",
-    "salt": "3218a953a67b1b0d9c7528eaf3a9a8c8",
-    "passwordHash": "540c69dba1d4b72eada45105f348a8969b2e79130be2ef14a07ab584ee69ca96",
+    "salt": "2872e9c35ab71769151435fd62fc7a76",
+    "passwordHash": "ba70a86528095f603f9b5a43d370b4053e0946bcc7c57ea68f4f5af08eeff5cb",
     "createdAt": "2026-10-27T14:46:57.977Z",
-    "passwordResetAt": "2026-10-31T03:48:23.497Z",
+    "passwordResetAt": "2026-11-08T11:04:05.446Z",
     "updatedAt": "2026-10-28T02:54:54.514Z"
   },
   {
@@ -149,10 +149,10 @@
         ]
       }
     },
-    "salt": "00036e970571f6e6318fd3f1c495098f",
-    "passwordHash": "3d1e842228c6af51120d78386ffd8ff9ac18c44403fe2ddefeb8c8a6f3d06884",
+    "salt": "72c2a095a3ede0d8249747fdf5fd9d6c",
+    "passwordHash": "9cc9b44dac9a7852ce29b1147116151921d737239c2bd840ceaf75e893d41831",
     "createdAt": "2026-10-27T14:46:58.046Z",
-    "passwordResetAt": "2026-10-31T03:48:23.544Z"
+    "passwordResetAt": "2026-11-08T11:04:05.508Z"
   },
   {
     "id": "769633a0-a283-49b8-8e43-5e1a0e003e87",
@@ -170,9 +170,132 @@
       "vehicleModel": "Honda Click 125",
       "orcrNumber": "TEST-ORCR-001"
     },
-    "salt": "2d12895e23a005e3be314897d7890f47",
-    "passwordHash": "5ebfb82f639545144d9358ef7044ee92db6f1eb1521ecff3a283835b770a04ef",
+    "salt": "767a3cec4bcd4673708fbc8a2c0c8db8",
+    "passwordHash": "1a7e9f9f8909285edb455b9b94c95742377fd28a8291545654d9b1645588c605",
     "createdAt": "2026-10-27T14:46:58.110Z",
-    "passwordResetAt": "2026-10-31T03:48:23.591Z"
+    "passwordResetAt": "2026-11-08T11:04:05.554Z"
+  },
+  {
+    "id": "5f601754-c6da-4f0b-862c-152afcb6bf82",
+    "role": "seller",
+    "name": "Maria Santos",
+    "email": "seller2@example.test",
+    "phone": "09181234568",
+    "approvalStatus": "approved",
+    "profile": {
+      "storeName": "Santos Gulay at Prutas",
+      "storeLocation": "Tanauan City Public Market",
+      "registrationType": "DTI",
+      "registrationNumber": "TEST-DTI-002",
+      "tin": "TEST-TIN-002",
+      "businessPermit": "TEST-PERMIT-002",
+      "validIdType": "PhilSys ID",
+      "validIdNumber": "TEST-ID-SELLER-002"
+    },
+    "salt": "c1e0f2eb6801e1184aefab4945033583",
+    "passwordHash": "626b22e4a1651ad5f0473ffc511bb9d43cdb01138a17e1db5b10bc343b0568a2",
+    "createdAt": "2026-11-08T11:04:05.606Z"
+  },
+  {
+    "id": "d78e2b1e-bc67-46e4-8398-53f504598788",
+    "role": "seller",
+    "name": "Pedro Reyes",
+    "email": "seller3@example.test",
+    "phone": "09181234569",
+    "approvalStatus": "approved",
+    "profile": {
+      "storeName": "Reyes Fresh Meat Shop",
+      "storeLocation": "Tanauan City Public Market",
+      "registrationType": "DTI",
+      "registrationNumber": "TEST-DTI-003",
+      "tin": "TEST-TIN-003",
+      "businessPermit": "TEST-PERMIT-003",
+      "validIdType": "Driver License",
+      "validIdNumber": "TEST-ID-SELLER-003"
+    },
+    "salt": "e6382917e94ce709d8b78431e9cbae3a",
+    "passwordHash": "3206ac3ab3fc1a1d73065c88b6eee56bd2a60fc9476981f394f0ea2c8045e21d",
+    "createdAt": "2026-11-08T11:04:05.651Z"
+  },
+  {
+    "id": "69b96fc0-d644-40f3-bc38-2affc55c5508",
+    "role": "seller",
+    "name": "Ana Cruz",
+    "email": "seller4@example.test",
+    "phone": "09181234570",
+    "approvalStatus": "approved",
+    "profile": {
+      "storeName": "Cruz Seafood & Pantry",
+      "storeLocation": "Tanauan City Public Market",
+      "registrationType": "DTI",
+      "registrationNumber": "TEST-DTI-004",
+      "tin": "TEST-TIN-004",
+      "businessPermit": "TEST-PERMIT-004",
+      "validIdType": "PhilSys ID",
+      "validIdNumber": "TEST-ID-SELLER-004"
+    },
+    "salt": "a3333e3dcb850beaa3d345b37c8ae9a4",
+    "passwordHash": "d4ff028e8602115e92a9cf8561592d2b00060b06a469aaa240718be6005c26be",
+    "createdAt": "2026-11-08T11:04:05.707Z"
+  },
+  {
+    "id": "333fd494-5f75-42fe-970f-5382055e2f6e",
+    "role": "driver",
+    "name": "Rider Carlo",
+    "email": "driver2@example.test",
+    "phone": "09191234568",
+    "approvalStatus": "approved",
+    "profile": {
+      "licenseNumber": "TEST-LICENSE-002",
+      "licenseType": "Professional",
+      "licenseExpiry": "2029-06-30",
+      "motorcycleType": "Motorcycle",
+      "plateNumber": "DRV-202",
+      "vehicleModel": "Yamaha Mio i125",
+      "orcrNumber": "TEST-ORCR-002"
+    },
+    "salt": "51b272ba69df11f9a94b75a1f0ef0af3",
+    "passwordHash": "71c958b1290840503fa0627b2e54d031d5ce8b5cac400ce8fe46b1226cdd64f3",
+    "createdAt": "2026-11-08T11:04:05.756Z"
+  },
+  {
+    "id": "83118e83-7ae6-4340-a44e-b54cfc3b4ca5",
+    "role": "driver",
+    "name": "Rider Miguel",
+    "email": "driver3@example.test",
+    "phone": "09191234569",
+    "approvalStatus": "approved",
+    "profile": {
+      "licenseNumber": "TEST-LICENSE-003",
+      "licenseType": "Professional",
+      "licenseExpiry": "2029-09-30",
+      "motorcycleType": "Motorcycle",
+      "plateNumber": "DRV-303",
+      "vehicleModel": "Honda Beat",
+      "orcrNumber": "TEST-ORCR-003"
+    },
+    "salt": "931fa06862e951d5ade03ddf69873092",
+    "passwordHash": "c679c1d369b69b6f97a63e26e0a8c2554e8da73de218e3fd59f7e6e56a42afbd",
+    "createdAt": "2026-11-08T11:04:05.810Z"
+  },
+  {
+    "id": "4b71a6ee-36d1-49c5-9f5b-5c58484e053c",
+    "role": "driver",
+    "name": "Rider Joshua",
+    "email": "driver4@example.test",
+    "phone": "09191234570",
+    "approvalStatus": "approved",
+    "profile": {
+      "licenseNumber": "TEST-LICENSE-004",
+      "licenseType": "Professional",
+      "licenseExpiry": "2030-01-31",
+      "motorcycleType": "Motorcycle",
+      "plateNumber": "DRV-404",
+      "vehicleModel": "Suzuki Burgman Street",
+      "orcrNumber": "TEST-ORCR-004"
+    },
+    "salt": "3692b13509fd55b4fb69a8c3018746be",
+    "passwordHash": "461daf80011a18d4c8d3c21d464aca7cb0254ff29c08089b4ffbff962746512c",
+    "createdAt": "2026-11-08T11:04:05.854Z"
   }
 ]
