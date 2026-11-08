@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8f3ec"/><stop offset="1" stop-color="#d5e9dc"/></linearGradient></defs>
+  <rect width="800" height="600" fill="url(#g)"/>
+  <path d="M400 180c-74 0-134 60-134 134 0 56 34 104 82 124 7-48 25-96 52-138 26 42 45 90 52 138 48-20 82-68 82-124 0-74-60-134-134-134z" fill="#75a98a" opacity=".75"/>
+  <text x="400" y="500" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" fill="#466b58">Product photo</text>
+</svg>

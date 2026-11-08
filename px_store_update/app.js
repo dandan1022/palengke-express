@@ -3,11 +3,11 @@
 const $ = s => document.querySelector(s);
 const money = n => '₱' + Number(n || 0).toLocaleString('en-PH', { maximumFractionDigits: 0 });
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-function productPhoto(p){return esc(p?.imageUrl||'https://loremflickr.com/800/600/fresh-food,market?lock=125');}
-function productThumb(p,cls='product-photo'){return `<img class="${cls}" src="${productPhoto(p)}" alt="${esc(p?.name||'Product')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://loremflickr.com/800/600/fresh-food,market?lock=125'">`; }
-const STATUS_NAMES = { pending:'New Order', accepted:'Accepted', ready:'Ready for Pickup', awaiting_driver:'Booking Driver', driver_assigned:'Driver Assigned', picked_up:'Picked Up', en_route:'Out for Delivery', delivered:'Delivered', rejected:'Rejected' };
-const STATUS_DETAILS = { pending:'Waiting for the market seller to accept', accepted:'Seller is preparing your groceries', ready:'Groceries are packed and ready', awaiting_driver:'Seller booked a driver; awaiting rider acceptance', driver_assigned:'Driver accepted the booking and is coming to the market', picked_up:'Driver collected your order at the market', en_route:'Driver is heading to your delivery address', delivered:'Successfully delivered to the customer', rejected:'The seller could not fulfill this order' };
-const STAGES = ['pending','accepted','ready','awaiting_driver','driver_assigned','picked_up','en_route','delivered'];
+function productPhoto(p){return esc(p?.imageUrl||'assets/product-placeholder.svg');}
+function productThumb(p,cls='product-photo'){return `<img class="${cls}" src="${productPhoto(p)}" alt="${esc(p?.name||'Product')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'">`; }
+const STATUS_NAMES = { pending:'New Order', accepted:'Accepted', ready:'Ready for Pickup', awaiting_driver:'Booking Driver', driver_assigned:'Driver Assigned', picked_up:'Picked Up', en_route:'Out for Delivery', awaiting_customer_confirmation:'Awaiting Customer Confirmation', delivered:'Delivered', rejected:'Rejected' };
+const STATUS_DETAILS = { pending:'Waiting for the market seller to accept', accepted:'Seller is preparing your groceries', ready:'Groceries are packed and ready', awaiting_driver:'Seller booked a driver; awaiting rider acceptance', driver_assigned:'Driver accepted the booking and is coming to the market', picked_up:'Driver collected your order at the market', en_route:'Driver is heading to your delivery address', awaiting_customer_confirmation:'Driver marked the order delivered. Please confirm that you actually received it.', delivered:'Customer confirmed that the order was received', rejected:'The seller could not fulfill this order' };
+const STAGES = ['pending','accepted','ready','awaiting_driver','driver_assigned','picked_up','en_route','awaiting_customer_confirmation','delivered'];
 const session=JSON.parse(sessionStorage.getItem('px-session')||'null');
 const state = {
   role: session?.user?.role || 'customer', section:'shop', filter:'All', search:'', orders:[], products:[], stores:[], selectedStoreId:'', market:null, locations:[], rider:null,
@@ -61,6 +61,7 @@ function orderActions(order){
     if (order.status === 'driver_assigned') return b('pickup','📦 Confirm Pickup');
     if (order.status === 'picked_up') return b('start_delivery','🛵 Start Delivery');
     if (order.status === 'en_route') return b('delivered','✓ Mark as Delivered');
+    if (state.role === 'customer' && order.status === 'awaiting_customer_confirmation') return b('confirm_received','✓ Confirm Order Received');
   }
   return '';
 }
@@ -69,15 +70,15 @@ function orderTimeline(order){
   const position=STAGES.indexOf(order.status);
   return `<ul class="timeline">${[
       ['pending','Order placed'],['accepted','Seller accepted'],['ready','Packed and ready'],['awaiting_driver','Driver booked'],
-      ['driver_assigned','Driver confirmed'],['picked_up','Picked up from market'],['en_route','On the way'],['delivered','Delivered']
+      ['driver_assigned','Rider assigned'],['picked_up','Picked up from seller'],['en_route','On the way'],['awaiting_customer_confirmation','Driver marked delivered'],['delivered','Customer confirmed received']
     ].map(([status,label],i)=>{
       const event=order.history.find(h=>h.status===status);
       return `<li class="${i<=position ? 'done':''}"><span class="step-dot"></span><div><strong>${label}</strong><small>${event ? fmtTime(event.time) : 'Pending'}</small></div></li>`;
     }).join('')}</ul>`;
 }
 function mapSection(order){
-  if (!['awaiting_driver','driver_assigned','picked_up','en_route','delivered'].includes(order.status)) return '';
-  const target=order.status==='en_route'||order.status==='delivered'?'Customer drop-off':'Seller pickup';
+  if (!['awaiting_driver','driver_assigned','picked_up','en_route','awaiting_customer_confirmation','delivered'].includes(order.status)) return '';
+  const target=['en_route','awaiting_customer_confirmation','delivered'].includes(order.status)?'Customer drop-off':'Seller pickup';
   const distance=order.riderLocation&&Number.isFinite(Number(order.distanceToTargetMeters)) ? ` · ${Number(order.distanceToTargetMeters)<1000?Math.round(order.distanceToTargetMeters)+' m':(Number(order.distanceToTargetMeters)/1000).toFixed(1)+' km'} to ${target.toLowerCase()}` : '';
   const live=order.riderLocation&&order.trackingMode==='gps';
   return `<div class="small-label">Live delivery map · ${target}</div>
@@ -389,14 +390,15 @@ function customerStatusMessage(order,status){
     driver_assigned:`Delivery rider${who} has been assigned to your order and is heading to the seller for pickup.`,
     picked_up:`Your order has been picked up by${who||' the delivery rider'}.`,
     en_route:`Your order is on the way. Rider${who} is now heading to your delivery location.`,
-    delivered:'Your Palengke Express order has been delivered.'
+    awaiting_customer_confirmation:'The rider marked your order as delivered. Please confirm that you actually received it.',
+    delivered:'Order complete — you confirmed that your Palengke Express order was received.'
   }[status]||null;
 }
 function customerMilestoneEvents(order,previous){
   if(!previous) return [];
   const prevHistory=Array.isArray(previous.history)?previous.history:[];
   const nextHistory=Array.isArray(order.history)?order.history:[];
-  const statuses=new Set(['accepted','awaiting_driver','driver_assigned','picked_up','en_route','delivered']);
+  const statuses=new Set(['accepted','awaiting_driver','driver_assigned','picked_up','en_route','awaiting_customer_confirmation','delivered']);
   // Use history deltas so rapid status changes cannot skip intermediate customer notifications.
   return nextHistory.slice(prevHistory.length).filter(event=>statuses.has(event?.status));
 }
@@ -462,7 +464,9 @@ async function init(){
 }
 function setConnection(connected){
   state.online=connected;
-  const el=$('#connection');el.classList.toggle('offline',!connected);
+  const el=$('#connection');
+  if(!el) return;
+  el.classList.toggle('offline',!connected);
   el.innerHTML=`<span class="live-dot"></span>${connected?'Live · Connected':'Reconnecting…'}`;
 }
 function destroyMap(){state.mapEpoch++;if(state.map){state.map.remove();state.map=null;}state.riderMarker=null;if(state.riderAccuracyCircle){state.riderAccuracyCircle=null;}state.routeCoords=[];state.liveRouteLayer=null;state.lastRouteOrigin=null;state.lastRouteRefreshAt=0;}
@@ -533,7 +537,7 @@ async function updateLiveRoute(order,force=false){
   if(!force && now-state.lastRouteRefreshAt<9000 && approxMeters(origin,state.lastRouteOrigin)<40)return;
   state.lastRouteRefreshAt=now;state.lastRouteOrigin=origin;
   const pickup=order.pickupLocation||state.stores.find(s=>s.id===order.sellerId)?.coordinates||state.market;
-  const target=(order.status==='en_route'||order.status==='delivered')?order.destination:pickup;
+  const target=(['en_route','awaiting_customer_confirmation','delivered'].includes(order.status))?order.destination:pickup;
   const points=await fetchRoute(origin,target);if(!state.map)return;
   if(state.liveRouteLayer)state.map.removeLayer(state.liveRouteLayer);
   state.liveRouteLayer=L.polyline(points,{color:'#147a55',weight:6,opacity:.92,lineCap:'round'}).addTo(state.map);

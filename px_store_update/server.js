@@ -199,18 +199,18 @@ const LOCATIONS = Object.freeze([
   { id: 'banadero', name: 'Bañadero', address: 'Brgy. Bañadero, Tanauan City', lat: 14.1048, lng: 121.1301 }
 ]);
 const PRODUCT_PHOTOS = {
-  tomato: 'https://loremflickr.com/800/600/tomato,fresh?lock=101',
-  pechay: 'https://loremflickr.com/800/600/leafy-greens,vegetable?lock=102',
-  carrot: 'https://loremflickr.com/800/600/carrot,vegetable?lock=103',
-  eggplant: 'https://loremflickr.com/800/600/eggplant,vegetable?lock=104',
-  pork: 'https://loremflickr.com/800/600/pork,raw-meat?lock=105',
-  chicken: 'https://loremflickr.com/800/600/chicken,raw-meat?lock=106',
-  tilapia: 'https://loremflickr.com/800/600/tilapia,fish?lock=107',
-  shrimp: 'https://loremflickr.com/800/600/shrimp,seafood?lock=108',
-  mango: 'https://loremflickr.com/800/600/mango,fruit?lock=109',
-  banana: 'https://loremflickr.com/800/600/banana,fruit?lock=110',
-  rice: 'https://loremflickr.com/800/600/rice,grain?lock=111',
-  eggs: 'https://loremflickr.com/800/600/eggs,food?lock=112'
+  tomato: 'assets/products/tomato.jpg',
+  pechay: 'assets/products/pechay.jpg',
+  carrot: 'assets/products/carrot.jpg',
+  eggplant: 'assets/products/eggplant.jpg',
+  pork: 'assets/products/pork.jpg',
+  chicken: 'assets/products/chicken.jpg',
+  tilapia: 'assets/products/tilapia.jpg',
+  shrimp: 'assets/products/shrimp.jpg',
+  mango: 'assets/products/mango.jpg',
+  banana: 'assets/products/banana.jpg',
+  rice: 'assets/products/rice.jpg',
+  eggs: 'assets/products/eggs.jpg'
 };
 function fallbackProductPhoto(category='', name=''){
   const key=(name+' '+category).toLowerCase();
@@ -226,14 +226,14 @@ function fallbackProductPhoto(category='', name=''){
   if(key.includes('banana')) return PRODUCT_PHOTOS.banana;
   if(key.includes('rice')) return PRODUCT_PHOTOS.rice;
   if(key.includes('egg')) return PRODUCT_PHOTOS.eggs;
-  if(category==='Fruits') return 'https://loremflickr.com/800/600/fresh-fruit,market?lock=120';
-  if(category==='Fish') return 'https://loremflickr.com/800/600/fresh-fish,market?lock=121';
-  if(category==='Meat') return 'https://loremflickr.com/800/600/fresh-meat,market?lock=122';
-  if(category==='Vegetables') return 'https://loremflickr.com/800/600/fresh-vegetables,market?lock=123';
-  if(category==='Pantry') return 'https://loremflickr.com/800/600/groceries,pantry?lock=124';
-  return 'https://loremflickr.com/800/600/fresh-food,market?lock=125';
+  if(category==='Fruits') return PRODUCT_PHOTOS.mango;
+  if(category==='Fish') return PRODUCT_PHOTOS.tilapia;
+  if(category==='Meat') return PRODUCT_PHOTOS.pork;
+  if(category==='Vegetables') return PRODUCT_PHOTOS.pechay;
+  if(category==='Pantry') return PRODUCT_PHOTOS.rice;
+  return PRODUCT_PHOTOS.tomato;
 }
-function productView(p){ return {...p, imageUrl: clean(p.imageUrl,500) || fallbackProductPhoto(p.category,p.name)}; }
+function productView(p){ const saved=clean(p.imageUrl,500); const imageUrl=(!saved || /^https?:\/\//i.test(saved)) ? fallbackProductPhoto(p.category,p.name) : saved; return {...p, imageUrl}; }
 const PRODUCTS = Object.freeze([
   { id: 'tomato', name: 'Fresh Tomatoes', category: 'Vegetables', unit: '1 kg', price: 90, imageUrl: PRODUCT_PHOTOS.tomato, tone: '#fcefeb' },
   { id: 'pechay', name: 'Fresh Pechay', category: 'Vegetables', unit: '1 bundle', price: 35, imageUrl: PRODUCT_PHOTOS.pechay, tone: '#e8f5df' },
@@ -251,7 +251,7 @@ const PRODUCTS = Object.freeze([
 const DELIVERY_FEE = 40;
 
 const RIDER = Object.freeze({ id: 'rider-marco', name: 'Marco Santos', vehicle: 'Motorcycle' });
-const STATUS = ['pending', 'accepted', 'ready', 'awaiting_driver', 'driver_assigned', 'picked_up', 'en_route', 'delivered', 'rejected'];
+const STATUS = ['pending', 'accepted', 'ready', 'awaiting_driver', 'driver_assigned', 'picked_up', 'en_route', 'awaiting_customer_confirmation', 'delivered', 'rejected'];
 const ACTIONS = {
   accept: { role: 'seller', from: 'pending', to: 'accepted' },
   reject: { role: 'seller', from: 'pending', to: 'rejected' },
@@ -260,7 +260,8 @@ const ACTIONS = {
   accept_job: { role: 'driver', from: 'awaiting_driver', to: 'driver_assigned' },
   pickup: { role: 'driver', from: 'driver_assigned', to: 'picked_up' },
   start_delivery: { role: 'driver', from: 'picked_up', to: 'en_route' },
-  delivered: { role: 'driver', from: 'en_route', to: 'delivered' }
+  delivered: { role: 'driver', from: 'en_route', to: 'awaiting_customer_confirmation' },
+  confirm_received: { role: 'customer', from: 'awaiting_customer_confirmation', to: 'delivered' }
 };
 fs.mkdirSync(DATA_DIR, { recursive: true });
 let orders = [];
@@ -537,8 +538,9 @@ function orderResponse(req, res, url) {
       if (!rule || rule.role !== user.role) return error(res, 403, 'Action not allowed for this account.');
       if(user.role==='seller' && order.sellerId && order.sellerId!==user.id) return error(res,403,'This order belongs to another seller store.');
       if(user.role==='driver' && body.action!=='accept_job' && order.rider?.id!==user.id) return error(res,403,'This delivery belongs to another driver.');
+      if(user.role==='customer' && order.customerId!==user.id) return error(res,403,'This order belongs to another customer.');
       if (order.status !== rule.from) return error(res, 409, `Order is currently ${order.status}. Refresh and try again.`);
-      if (body.action === 'accept_job' && orders.some(o => o.id !== order.id && o.rider?.id === user.id && !['delivered', 'rejected'].includes(o.status))) {
+      if (body.action === 'accept_job' && orders.some(o => o.id !== order.id && o.rider?.id === user.id && !['awaiting_customer_confirmation','delivered', 'rejected'].includes(o.status))) {
         return error(res, 409, 'Rider already has an active delivery.');
       }
       order.status = rule.to;
@@ -556,6 +558,8 @@ function orderResponse(req, res, url) {
       }
       if (body.action === 'pickup') order.trackingTarget = 'seller';
       if (body.action === 'start_delivery') { order.trackingMode = order.trackingMode==='gps'?'gps':'waiting'; order.trackingTarget='customer'; }
+      if (body.action === 'delivered') { order.driverMarkedDeliveredAt = order.updatedAt; order.trackingMode = 'stopped'; }
+      if (body.action === 'confirm_received') { order.customerConfirmedDeliveredAt = order.updatedAt; }
       persist(); broadcast(); sheetEvent('order_status',user,{orderId:order.id,status:order.status,action:body.action});
       return respond(res, 200, { order });
     }).catch(e => error(res, 400, e.message));

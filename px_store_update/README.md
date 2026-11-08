@@ -220,3 +220,10 @@ The Customer POV now sends an in-app notification for every delivery milestone a
 - Seller **Add item** now has an optional **Product image URL** field instead of an Emoji field.
 - If the Seller leaves the image URL blank, the app assigns a real product/category photo automatically.
 - Photos are loaded from an online image service, so internet access is required for the thumbnails.
+
+## Product photo sources
+Starter product photos use Wikimedia Commons image URLs (public-domain or Creative Commons files). The app replaces older LoremFlickr tester-image URLs automatically so existing tester stores do not need to be recreated.
+
+
+## Delivery confirmation update
+The customer now receives milestone notifications for seller confirmation, rider assignment, pickup, on-the-way, driver-marked-delivered, and final customer-confirmed delivery. When the rider taps Mark as Delivered, the order moves to Awaiting Customer Confirmation. Only the customer can tap Confirm Order Received to finalize it as Delivered.
