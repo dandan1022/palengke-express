@@ -227,7 +227,3 @@ Starter product photos use Wikimedia Commons image URLs (public-domain or Creati
 
 ## Delivery confirmation update
 The customer now receives milestone notifications for seller confirmation, rider assignment, pickup, on-the-way, driver-marked-delivered, and final customer-confirmed delivery. When the rider taps Mark as Delivered, the order moves to Awaiting Customer Confirmation. Only the customer can tap Confirm Order Received to finalize it as Delivered.
-
-Real internet product photo sources
-- Product starter images use real web photographs (primarily Wikimedia Commons plus other food photo sources).
-- If a remote image is unavailable, the UI falls back to the local placeholder instead of showing a broken icon.

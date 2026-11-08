@@ -1,1 +1,2 @@
-Product photos are loaded from stable Wikimedia Commons direct image URLs in server.js. This folder is reserved for local overrides.
+Starter products now use real photographic URLs from Wikimedia Commons.
+The old generated placeholder JPG files were removed so they cannot appear in the storefront.

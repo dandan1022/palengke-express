@@ -21,10 +21,10 @@
       "deliveryAddress": "123 Tester Street, Tanauan City"
     },
     "approvalStatus": "approved",
-    "salt": "7489d51bc52c9d4f80436ca32718c7b3",
-    "passwordHash": "7ebfe26fb4a2fa78cf11ec89077d0bf32a5b9d2358a488dd96d01f5250843765",
+    "salt": "ccfda338eaacdc5418ce5f474d3b40e9",
+    "passwordHash": "be1ad36b01435b2bab667aeba6c9fd2955fd9dd8f3f3271969a08c33e4741c4e",
     "createdAt": "2026-10-27T14:46:57.977Z",
-    "passwordResetAt": "2026-11-08T11:39:22.377Z",
+    "passwordResetAt": "2026-11-08T11:57:28.912Z",
     "updatedAt": "2026-10-28T02:54:54.514Z"
   },
   {
@@ -149,10 +149,10 @@
         ]
       }
     },
-    "salt": "5d12da17534ad3024fd2e9d66bc7f114",
-    "passwordHash": "bdf6848378eb44a011457a59dcc2914e14fe7f2bb5ddb21da3f32702c61e3239",
+    "salt": "c9290748f27eb308c9b02a391269f172",
+    "passwordHash": "5224975e27fa6d2e7ed6f32dcd84f36b2998d7508a806ce450873395cd1d9407",
     "createdAt": "2026-10-27T14:46:58.046Z",
-    "passwordResetAt": "2026-11-08T11:39:22.424Z"
+    "passwordResetAt": "2026-11-08T11:57:28.955Z"
   },
   {
     "id": "769633a0-a283-49b8-8e43-5e1a0e003e87",
@@ -170,10 +170,10 @@
       "vehicleModel": "Honda Click 125",
       "orcrNumber": "TEST-ORCR-001"
     },
-    "salt": "9b1eba284c5e891e1ae55e92d75c8f33",
-    "passwordHash": "f2fcff125f93c0b4f4a59d9edffd9fd1aeb25ff533f0e1ec81db16d8985d62ae",
+    "salt": "5e4799c90a77177a4b9c97bffa969ea9",
+    "passwordHash": "f59584dcbb9c637fc83512966b15f9fd5b13041a2c6199f5efbc8efa6ff8a826",
     "createdAt": "2026-10-27T14:46:58.110Z",
-    "passwordResetAt": "2026-11-08T11:39:22.470Z"
+    "passwordResetAt": "2026-11-08T11:57:29.005Z"
   },
   {
     "id": "5f601754-c6da-4f0b-862c-152afcb6bf82",
@@ -192,10 +192,10 @@
       "validIdType": "PhilSys ID",
       "validIdNumber": "TEST-ID-SELLER-002"
     },
-    "salt": "95677080d1a8622dedca1a4bb719690d",
-    "passwordHash": "f76531e668e9c8760a92e6908f1fbdf19066809b2e13e501042ed77c187ce0c9",
+    "salt": "c7914d6a6c142d162409b56862e591b3",
+    "passwordHash": "8573aa0ec89832f7eaaab337549f789b7b6e326928051fc3178ed14b276ac44b",
     "createdAt": "2026-11-08T11:04:05.606Z",
-    "passwordResetAt": "2026-11-08T11:39:22.514Z"
+    "passwordResetAt": "2026-11-08T11:57:29.050Z"
   },
   {
     "id": "d78e2b1e-bc67-46e4-8398-53f504598788",
@@ -214,10 +214,10 @@
       "validIdType": "Driver License",
       "validIdNumber": "TEST-ID-SELLER-003"
     },
-    "salt": "23edcd2a57ca27cb8a437333deb3e273",
-    "passwordHash": "c75cbf5744713dec7345a0376b1c5a96cbb2e505fd7f641829cd758eb5174e01",
+    "salt": "96e276b4ca4cb1b268e04fc1e0977e14",
+    "passwordHash": "fce06336a1e8f42aceb83f1f973509408dcfa260dfe89763dd93564798318690",
     "createdAt": "2026-11-08T11:04:05.651Z",
-    "passwordResetAt": "2026-11-08T11:39:22.561Z"
+    "passwordResetAt": "2026-11-08T11:57:29.094Z"
   },
   {
     "id": "69b96fc0-d644-40f3-bc38-2affc55c5508",
@@ -236,10 +236,10 @@
       "validIdType": "PhilSys ID",
       "validIdNumber": "TEST-ID-SELLER-004"
     },
-    "salt": "32a9f4a01709305d0d33b303f595d62a",
-    "passwordHash": "970b49a2ea91a8e55255039956f51c579d929f6c9358b0a7428c801d257927cd",
+    "salt": "6c9ef252ebccbd99a1332f6012d9a6e9",
+    "passwordHash": "499cf15149e02071e1586f19e1adfa9d542d290e1f667bc38cb91c08098cef3c",
     "createdAt": "2026-11-08T11:04:05.707Z",
-    "passwordResetAt": "2026-11-08T11:39:22.606Z"
+    "passwordResetAt": "2026-11-08T11:57:29.144Z"
   },
   {
     "id": "333fd494-5f75-42fe-970f-5382055e2f6e",
@@ -257,10 +257,10 @@
       "vehicleModel": "Yamaha Mio i125",
       "orcrNumber": "TEST-ORCR-002"
     },
-    "salt": "72d9c3c2a6edf94cd3df2ed3f100cc8d",
-    "passwordHash": "b92e27fcdbcaff61013396f3c2e1ac4c930c6e237131c783dbd6778cb8e969fe",
+    "salt": "5f86fae0f419649cb09a777d6252f74e",
+    "passwordHash": "93622c337e7cb8f1ad7614d8da035237494f7e7210c85268bd90e294a529b4d2",
     "createdAt": "2026-11-08T11:04:05.756Z",
-    "passwordResetAt": "2026-11-08T11:39:22.649Z"
+    "passwordResetAt": "2026-11-08T11:57:29.187Z"
   },
   {
     "id": "83118e83-7ae6-4340-a44e-b54cfc3b4ca5",
@@ -278,10 +278,10 @@
       "vehicleModel": "Honda Beat",
       "orcrNumber": "TEST-ORCR-003"
     },
-    "salt": "82072abfef63045dcf9d3542b66e44f5",
-    "passwordHash": "2220efa753847d21866da9714bacdeb8108edfa10ad14fad9648e148d97b7d49",
+    "salt": "f28d7f020d7ef4fe6efc3a7aec466c54",
+    "passwordHash": "49cb4a1b27e383878f3908045033922901c747462ab058c5553350891dee6642",
     "createdAt": "2026-11-08T11:04:05.810Z",
-    "passwordResetAt": "2026-11-08T11:39:22.696Z"
+    "passwordResetAt": "2026-11-08T11:57:29.233Z"
   },
   {
     "id": "4b71a6ee-36d1-49c5-9f5b-5c58484e053c",
@@ -299,9 +299,9 @@
       "vehicleModel": "Suzuki Burgman Street",
       "orcrNumber": "TEST-ORCR-004"
     },
-    "salt": "3fe027e915bc5be958d5ae4fe8c7b962",
-    "passwordHash": "6ccf9c1092ae275fd5e345660280298078cc467ff10ed0644917b985b03cbad3",
+    "salt": "91471faf416f6ed8cda2ba35508e3a56",
+    "passwordHash": "beb8fbfd4caf00cca09129df52e748cce196922a81b458cebbc3aec05fec4640",
     "createdAt": "2026-11-08T11:04:05.854Z",
-    "passwordResetAt": "2026-11-08T11:39:22.742Z"
+    "passwordResetAt": "2026-11-08T11:57:29.276Z"
   }
 ]

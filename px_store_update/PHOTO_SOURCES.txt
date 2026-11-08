@@ -1,0 +1,16 @@
+Palengke Express starter product photo sources
+
+These are real photographs sourced from Wikimedia Commons. The app loads the image files directly from upload.wikimedia.org. See each file page for attribution/license details.
+
+Tomatoes: https://commons.wikimedia.org/wiki/File:Fresh_Sweet_tomatoes.jpg
+Pechay / Bok choy: https://commons.wikimedia.org/wiki/File:Bok_choy.jpg
+Carrots: https://commons.wikimedia.org/wiki/File:CARROT.jpg
+Eggplant: https://commons.wikimedia.org/wiki/File:Philippine_Eggplant.jpg
+Pork: https://commons.wikimedia.org/wiki/File:Pork_meat.jpg
+Chicken: https://commons.wikimedia.org/wiki/File:Raw_chicken.jpg
+Tilapia: https://commons.wikimedia.org/wiki/File:Tilapia_fish.jpg
+Shrimp: https://commons.wikimedia.org/wiki/File:Shrimp.jpg
+Mango: https://commons.wikimedia.org/wiki/File:Mango_fruit.jpg
+Banana: https://commons.wikimedia.org/wiki/File:Banana_fruit.jpeg
+Rice: https://commons.wikimedia.org/wiki/File:Ripe_Rice_Grains.jpg
+Eggs: https://commons.wikimedia.org/wiki/File:Chicken_Eggs.jpg

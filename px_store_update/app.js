@@ -3,8 +3,8 @@
 const $ = s => document.querySelector(s);
 const money = n => '₱' + Number(n || 0).toLocaleString('en-PH', { maximumFractionDigits: 0 });
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-function productPhoto(p){return esc(p?.imageUrl||'assets/product-placeholder.svg');}
-function productThumb(p,cls='product-photo'){return `<img class="${cls}" src="${productPhoto(p)}" alt="${esc(p?.name||'Product')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'">`; }
+function productPhoto(p){return esc(p?.imageUrl||'');}
+function productThumb(p,cls='product-photo'){const src=productPhoto(p);return src?`<img class="${cls}" src="${src}" alt="${esc(p?.name||'Product')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';this.parentElement?.classList.add('photo-unavailable')">`:`<span class="photo-unavailable-label">Photo unavailable</span>`; }
 const STATUS_NAMES = { pending:'New Order', accepted:'Accepted', ready:'Ready for Pickup', awaiting_driver:'Booking Driver', driver_assigned:'Driver Assigned', picked_up:'Picked Up', en_route:'Out for Delivery', awaiting_customer_confirmation:'Awaiting Customer Confirmation', delivered:'Delivered', rejected:'Rejected' };
 const STATUS_DETAILS = { pending:'Waiting for the market seller to accept', accepted:'Seller is preparing your groceries', ready:'Groceries are packed and ready', awaiting_driver:'Seller booked a driver; awaiting rider acceptance', driver_assigned:'Driver accepted the booking and is coming to the market', picked_up:'Driver collected your order at the market', en_route:'Driver is heading to your delivery address', awaiting_customer_confirmation:'Driver marked the order delivered. Please confirm that you actually received it.', delivered:'Customer confirmed that the order was received', rejected:'The seller could not fulfill this order' };
 const STAGES = ['pending','accepted','ready','awaiting_driver','driver_assigned','picked_up','en_route','awaiting_customer_confirmation','delivered'];
@@ -125,7 +125,7 @@ function storePicker(){
   return `<div class="store-picker-panel">
     <div class="store-picker-copy"><span class="store-picker-label">SHOP FROM</span><strong>Choose a seller store</strong><small>${state.stores.length} approved ${state.stores.length===1?'store':'stores'} available</small></div>
     <div class="store-picker-control">
-      <select id="store-select" aria-label="Choose seller store">${state.stores.map(s=>`<option value="${esc(s.id)}" ${s.id===state.selectedStoreId?'selected':''}>${esc(s.name)} — ${esc(s.location)}</option>`).join('')}</select>
+      <select id="store-select" aria-label="Choose seller store">${state.stores.map(s=>`<option value="${esc(s.id)}" ${s.id===state.selectedStoreId?'selected':''}>${s.isOpen?'🟢':'🔴'} ${esc(s.name)} — ${esc(s.location)}</option>`).join('')}</select>
       <span class="store-picker-status ${store?.isOpen?'open':'closed'}">${store?.isOpen?'OPEN NOW':'CLOSED'}</span>
     </div>
     ${store?`<div class="store-picker-meta"><span>${esc(store.ownerName)}</span><span>${esc(store.location)}</span><span>${Number(store.productCount||0)} item(s)</span><span>${esc(store.openReason||'')}</span></div>`:''}
@@ -143,7 +143,7 @@ function shopPage(){
     ${store ? `
     ${!store.isOpen?`<div class="notice">This store is currently closed. You can browse its items, but checkout is disabled until the seller opens the store or the automatic opening time begins.</div>`:''}
     <div class="section-head"><div><h2>Shop by category</h2><p>Items sold by ${esc(store.name)}</p></div></div>
-    <div class="category-pills">${['All','Vegetables','Meat','Fish','Fruits','Pantry','Other'].map(c=>`<button class="pill ${c===state.filter?'active':''}" data-filter="${c}">${c}</button>`).join('')}</div>
+    <div class="category-pills">${['All','Vegetables','Meat','Fish','Fruits','Pantry','Other'].map(c=>`<button class="pill ${c===state.filter?'active':''}" data-filter="${c}">${c==='All'?'🧺 ':''}${c}</button>`).join('')}</div>
     <div class="section-head"><div><h2>${esc(store.name)} items</h2><p id="products-count">${filtered.length} item(s) listed</p></div><div class="search-wrap">⌕ <input id="search-products" type="search" value="${esc(state.search)}" placeholder="Search this store…" aria-label="Search products"></div></div>
     <div class="product-grid" id="product-grid">${productCards(filtered,store)}</div>
     ${cartCount() ? `<button class="cart-fab" data-open-cart>View Cart <span class="cart-bubble">${cartCount()}</span> ${money(cartSubtotal())}</button>`:''}` : ''}`;
