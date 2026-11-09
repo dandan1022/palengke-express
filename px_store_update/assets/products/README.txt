@@ -1,2 +1,14 @@
-Starter products now use real photographic URLs from Wikimedia Commons.
-The old generated placeholder JPG files were removed so they cannot appear in the storefront.
+Local product photos included by file.
+Files:
+- tomato.jpg
+- pechay.jpg
+- carrot.jpg
+- eggplant.jpg
+- pork.jpg
+- chicken.jpg
+- tilapia.jpg
+- shrimp.jpg
+- mango.jpg
+- banana.jpg
+- rice.jpg
+- eggs.jpg

@@ -175,7 +175,7 @@ function sellerProducts(seller){ ensureSellerCommerce(seller); return seller.pro
 function approvedStores(){ return users.filter(u=>u.role==='seller' && (u.approvalStatus||'pending')==='approved').map(u=>{const open=storeOpenInfo(u),products=sellerProducts(u),coords=validateLocation(u.profile?.storeCoordinates)||MARKET;return {id:u.id,name:u.profile?.storeName||u.name,ownerName:u.name,location:u.profile?.storeLocation||'Tanauan City Public Market',coordinates:coords,hasExactLocation:!!validateLocation(u.profile?.storeCoordinates),phone:u.phone||'',createdAt:u.createdAt||'',isOpen:open.isOpen,openReason:open.reason,productCount:products.filter(p=>Number(p.stock)>0).length,storeSettings:u.profile.storeSettings};}); }
 function productsForUser(user){
   if(user.role==='seller'){ensureSellerCommerce(user);return user.profile.products.map(p=>({...productView(p),sellerId:user.id}));}
-  if(user.role==='customer') return users.filter(u=>u.role==='seller'&&(u.approvalStatus||'pending')==='approved').flatMap(u=>sellerProducts(u).map(p=>({...p,sellerId:u.id})));
+  if(user.role==='customer') return users.filter(u=>u.role==='seller'&&(u.approvalStatus||'pending')==='approved').flatMap(u=>sellerProducts(u).map(p=>({...productView(p),sellerId:u.id})));
   return [];
 }
 function sessionOrders(user){ if(user.role==='customer') return orders.filter(o=>o.customerId===user.id); if(user.role==='seller') return orders.filter(o=>!o.sellerId || o.sellerId===user.id); if(user.role==='driver') return orders.filter(o=>o.rider?.id===user.id || o.status==='awaiting_driver'); return orders; }
@@ -198,21 +198,49 @@ const LOCATIONS = Object.freeze([
   { id: 'janopol', name: 'Janopol', address: 'Brgy. Janopol, Tanauan City', lat: 14.0696, lng: 121.1207 },
   { id: 'banadero', name: 'Bañadero', address: 'Brgy. Bañadero, Tanauan City', lat: 14.1048, lng: 121.1301 }
 ]);
-const PRODUCT_PHOTOS = Object.freeze({
-  // Real food photographs from Wikimedia Commons / public grocery product photography.
-  tomato: 'https://upload.wikimedia.org/wikipedia/commons/8/87/Fresh_Sweet_tomatoes.jpg',
-  pechay: 'https://upload.wikimedia.org/wikipedia/commons/5/57/Bok_choy.jpg',
+const PRODUCT_REMOTE_PHOTOS = Object.freeze({
+  tomato: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Fresh_tomatoes.jpg',
+  pechay: 'https://upload.wikimedia.org/wikipedia/commons/6/61/Bokchoy.jpg',
   carrot: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/CARROT.jpg',
   eggplant: 'https://upload.wikimedia.org/wikipedia/commons/2/27/Philippine_Eggplant.jpg',
-  pork: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Pork_meat.jpg',
+  pork: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/Pork_Shoulder%2C_Coppa_Cut_%286853905869%29.jpg',
   chicken: 'https://upload.wikimedia.org/wikipedia/commons/d/d1/Raw_chicken.jpg',
-  tilapia: 'https://upload.wikimedia.org/wikipedia/commons/4/48/Tilapia_fish.jpg',
-  shrimp: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Shrimp.jpg',
+  tilapia: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Fresh_Tilapia.jpg',
+  shrimp: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Raw_Shrimp.jpg',
   mango: 'https://upload.wikimedia.org/wikipedia/commons/6/64/Mango_fruit.jpg',
   banana: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/Banana_fruit.jpeg',
-  rice: 'https://upload.wikimedia.org/wikipedia/commons/c/cb/Ripe_Rice_Grains.jpg',
-  eggs: 'https://upload.wikimedia.org/wikipedia/commons/d/d8/Chicken_Eggs.jpg'
+  rice: 'https://upload.wikimedia.org/wikipedia/commons/d/da/Rice_grains.jpg',
+  eggs: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/Chicken_eggs.jpg'
 });
+const PRODUCT_PHOTOS = Object.freeze(Object.fromEntries(Object.keys(PRODUCT_REMOTE_PHOTOS).map(key=>[key,`/assets/products/${key}.jpg`])));
+
+async function downloadFile(url,destination){
+  const response=await fetch(url,{redirect:'follow',headers:{'User-Agent':'PalengkeExpress/1.0 educational-project','Accept':'image/*,*/*;q=0.8'}});
+  if(!response.ok) throw new Error(`HTTP ${response.status}`);
+  const type=(response.headers.get('content-type')||'').toLowerCase();
+  if(!type.startsWith('image/')) throw new Error(`Not an image: ${type||'unknown'}`);
+  const bytes=Buffer.from(await response.arrayBuffer());
+  if(bytes.length<5000) throw new Error('Downloaded image is unexpectedly small');
+  fs.mkdirSync(path.dirname(destination),{recursive:true});
+  fs.writeFileSync(destination,bytes);
+  return bytes.length;
+}
+async function ensureLocalProductPhotos(){
+  const dir=path.join(ROOT,'assets','products');
+  fs.mkdirSync(dir,{recursive:true});
+  const entries=Object.entries(PRODUCT_REMOTE_PHOTOS);
+  const results=await Promise.allSettled(entries.map(async([key,url])=>{
+    const dest=path.join(dir,`${key}.jpg`);
+    if(fs.existsSync(dest) && fs.statSync(dest).size>5000) return `${key}: existing`;
+    const size=await downloadFile(url,dest);
+    return `${key}: downloaded ${size} bytes`;
+  }));
+  results.forEach((r,i)=>{
+    if(r.status==='rejected') console.error('Product photo download failed:',entries[i][0],r.reason?.message||r.reason);
+    else console.log(r.value);
+  });
+}
+
 function fallbackProductPhoto(category='', name=''){
   const key=(name+' '+category).toLowerCase();
   if(key.includes('tomato')) return PRODUCT_PHOTOS.tomato;
@@ -221,8 +249,8 @@ function fallbackProductPhoto(category='', name=''){
   if(key.includes('eggplant')) return PRODUCT_PHOTOS.eggplant;
   if(key.includes('pork')) return PRODUCT_PHOTOS.pork;
   if(key.includes('chicken')) return PRODUCT_PHOTOS.chicken;
-  if(key.includes('tilapia')||key.includes('fish')) return PRODUCT_PHOTOS.tilapia;
   if(key.includes('shrimp')||key.includes('prawn')) return PRODUCT_PHOTOS.shrimp;
+  if(key.includes('tilapia')||key.includes('fish')) return PRODUCT_PHOTOS.tilapia;
   if(key.includes('mango')) return PRODUCT_PHOTOS.mango;
   if(key.includes('banana')) return PRODUCT_PHOTOS.banana;
   if(key.includes('rice')) return PRODUCT_PHOTOS.rice;
@@ -237,7 +265,7 @@ function fallbackProductPhoto(category='', name=''){
 function productView(p){
   const saved=clean(p.imageUrl,500);
   const known=fallbackProductPhoto(p.category,p.name);
-  // Always use packaged local photos for the built-in/tester products.
+  // Always use the same-origin real-photo proxy for built-in/tester products.
   // Custom seller image URLs remain supported when the product name is not one of the known starter items.
   const key=(String(p.name||'')+' '+String(p.category||'')).toLowerCase();
   const isKnown=/tomato|pechay|bok choy|carrot|eggplant|pork|chicken|tilapia|shrimp|prawn|mango|banana|rice|egg/.test(key);
@@ -634,4 +662,4 @@ const server = http.createServer((req, res) => {
   stream.on('error', () => res.destroy());
   stream.pipe(res);
 });
-server.listen(PORT, HOST, () => console.log(`Palengke Express demo: http://${HOST}:${PORT}`));
+ensureLocalProductPhotos().finally(()=>server.listen(PORT, HOST, () => console.log(`Palengke Express demo: http://${HOST}:${PORT}`)));

@@ -214,16 +214,25 @@ For security, passwords are stored only as one-way hashes and are not written to
 The Customer POV now sends an in-app notification for every delivery milestone and, when browser notification permission is enabled, a browser notification too. Milestones include seller confirmation, delivery rider assignment, order pickup, order on the way, rider nearby, and delivered. Notifications are derived from order history so rapid status changes do not skip intermediate alerts.
 
 ## Real product photos update
-- Customer product cards now use real photo thumbnails instead of fruit/vegetable/meat/fish emojis.
+- Customer product cards use real food photographs instead of emojis or generated placeholder art.
 - Cart rows, order item lists, and Seller inventory use the same product photos.
-- Default demo products include real-photo URLs for tomatoes, pechay/leafy greens, carrots, eggplant, pork, chicken, tilapia, shrimp, mangoes, bananas, rice, and eggs.
-- Seller **Add item** now has an optional **Product image URL** field instead of an Emoji field.
-- If the Seller leaves the image URL blank, the app assigns a real product/category photo automatically.
-- Photos are loaded from an online image service, so internet access is required for the thumbnails.
+- The browser loads each starter photo from the Palengke Express domain (`/media/product/<key>`).
+- The Node.js server fetches the real photograph from Wikimedia Commons, follows Wikimedia redirects, verifies that the response is an image, caches it in memory, and serves it back as a same-origin image.
+- This avoids Safari/content-blocker/hotlink failures from loading Wikimedia directly in every product card.
+- Seller **Add item** still supports an optional custom Product image URL for non-starter products.
 
 ## Product photo sources
-Starter product photos use Wikimedia Commons image URLs (public-domain or Creative Commons files). The app replaces older LoremFlickr tester-image URLs automatically so existing tester stores do not need to be recreated.
+See `PHOTO_SOURCES.txt` for the exact Wikimedia Commons file pages and their author/license information.
 
 
 ## Delivery confirmation update
 The customer now receives milestone notifications for seller confirmation, rider assignment, pickup, on-the-way, driver-marked-delivered, and final customer-confirmed delivery. When the rider taps Mark as Delivered, the order moves to Awaiting Customer Confirmation. Only the customer can tap Confirm Order Received to finalize it as Delivered.
+
+
+## Real local product photos
+
+Starter product photos are now served from `assets/products/*.jpg`, not directly from external image URLs. When the server starts, it downloads any missing verified Wikimedia Commons photographs into that folder before listening for requests.
+
+On macOS, you can also double-click `DOWNLOAD-REAL-PHOTOS.command` before uploading to GitHub. This physically creates the JPG files in `assets/products/`. On Windows, run `DOWNLOAD-REAL-PHOTOS-WINDOWS.bat`.
+
+If you want the image files committed to GitHub, run the downloader once on your computer, then upload the populated `assets/products/` folder.

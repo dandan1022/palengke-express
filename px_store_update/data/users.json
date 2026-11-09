@@ -21,10 +21,10 @@
       "deliveryAddress": "123 Tester Street, Tanauan City"
     },
     "approvalStatus": "approved",
-    "salt": "ccfda338eaacdc5418ce5f474d3b40e9",
-    "passwordHash": "be1ad36b01435b2bab667aeba6c9fd2955fd9dd8f3f3271969a08c33e4741c4e",
+    "salt": "41254f4438e14868dd6d6c33f7cc19e7",
+    "passwordHash": "72d0500accf0028559dfbf5c60c7fa99b1f00f97904b72fa6a3565426b3c1808",
     "createdAt": "2026-10-27T14:46:57.977Z",
-    "passwordResetAt": "2026-11-08T11:57:28.912Z",
+    "passwordResetAt": "2026-11-08T12:07:02.942Z",
     "updatedAt": "2026-10-28T02:54:54.514Z"
   },
   {
@@ -53,7 +53,8 @@
           "emoji": "🍅",
           "tone": "#fcefeb",
           "stock": 20,
-          "active": true
+          "active": true,
+          "imageUrl": "/assets/products/tomato.jpg"
         },
         {
           "id": "9e4f8acd-pechay",
@@ -64,7 +65,8 @@
           "emoji": "🥬",
           "tone": "#e8f5df",
           "stock": 23,
-          "active": true
+          "active": true,
+          "imageUrl": "/assets/products/pechay.jpg"
         },
         {
           "id": "9e4f8acd-carrot",
@@ -75,7 +77,8 @@
           "emoji": "🥕",
           "tone": "#fff1df",
           "stock": 26,
-          "active": true
+          "active": true,
+          "imageUrl": "/assets/products/carrot.jpg"
         },
         {
           "id": "9e4f8acd-eggplant",
@@ -86,7 +89,8 @@
           "emoji": "🍆",
           "tone": "#eeeaf7",
           "stock": 29,
-          "active": true
+          "active": true,
+          "imageUrl": "/assets/products/eggplant.jpg"
         },
         {
           "id": "9e4f8acd-pork",
@@ -97,7 +101,8 @@
           "emoji": "🥩",
           "tone": "#faecea",
           "stock": 32,
-          "active": true
+          "active": true,
+          "imageUrl": "/assets/products/pork.jpg"
         },
         {
           "id": "9e4f8acd-chicken",
@@ -108,7 +113,8 @@
           "emoji": "🍗",
           "tone": "#fff3e5",
           "stock": 35,
-          "active": true
+          "active": true,
+          "imageUrl": "/assets/products/chicken.jpg"
         },
         {
           "id": "9e4f8acd-tilapia",
@@ -119,7 +125,8 @@
           "emoji": "🐟",
           "tone": "#e6f3fc",
           "stock": 38,
-          "active": true
+          "active": true,
+          "imageUrl": "/assets/products/tilapia.jpg"
         },
         {
           "id": "9e4f8acd-shrimp",
@@ -130,6 +137,138 @@
           "emoji": "🦐",
           "tone": "#fff0e9",
           "stock": 41,
+          "active": true,
+          "imageUrl": "/assets/products/shrimp.jpg"
+        }
+      ],
+      "storeSettings": {
+        "mode": "manual",
+        "manualOpen": true,
+        "openTime": "06:00",
+        "closeTime": "18:00",
+        "days": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "storeCoordinates": {
+        "lat": 14.08204,
+        "lng": 121.14672,
+        "updatedAt": "2026-11-08T12:06:08.002Z"
+      }
+    },
+    "salt": "5fed948528c3ac760b33b0f330d5782b",
+    "passwordHash": "defb85b6fe6f1241631dcf32234ac01ef58db2866a4b950709625160b627f01f",
+    "createdAt": "2026-10-27T14:46:58.046Z",
+    "passwordResetAt": "2026-11-08T12:07:02.987Z"
+  },
+  {
+    "id": "769633a0-a283-49b8-8e43-5e1a0e003e87",
+    "role": "driver",
+    "name": "Driver Tester",
+    "email": "driver@example.test",
+    "phone": "09191234567",
+    "approvalStatus": "approved",
+    "profile": {
+      "licenseNumber": "TEST-LICENSE-001",
+      "licenseType": "Professional",
+      "licenseExpiry": "2028-12-31",
+      "motorcycleType": "Motorcycle",
+      "plateNumber": "TEST-123",
+      "vehicleModel": "Honda Click 125",
+      "orcrNumber": "TEST-ORCR-001"
+    },
+    "salt": "c7e6fed1937b6eff68e3426db656dc74",
+    "passwordHash": "6cf6c7d1ddae50f54a4c756d3378733ee745ad0db187ba9d6ec8ff96e97c422a",
+    "createdAt": "2026-10-27T14:46:58.110Z",
+    "passwordResetAt": "2026-11-08T12:07:03.032Z"
+  },
+  {
+    "id": "5f601754-c6da-4f0b-862c-152afcb6bf82",
+    "role": "seller",
+    "name": "Maria Santos",
+    "email": "seller2@example.test",
+    "phone": "09181234568",
+    "approvalStatus": "approved",
+    "profile": {
+      "storeName": "Santos Gulay at Prutas",
+      "storeLocation": "Tanauan City Public Market",
+      "registrationType": "DTI",
+      "registrationNumber": "TEST-DTI-002",
+      "tin": "TEST-TIN-002",
+      "businessPermit": "TEST-PERMIT-002",
+      "validIdType": "PhilSys ID",
+      "validIdNumber": "TEST-ID-SELLER-002",
+      "products": [
+        {
+          "id": "5f601754-tomato",
+          "name": "Fresh Tomatoes",
+          "category": "Vegetables",
+          "unit": "1 kg",
+          "price": 90,
+          "imageUrl": "/assets/products/tomato.jpg",
+          "tone": "#fcefeb",
+          "stock": 18,
+          "active": true
+        },
+        {
+          "id": "5f601754-pechay",
+          "name": "Fresh Pechay",
+          "category": "Vegetables",
+          "unit": "1 bundle",
+          "price": 35,
+          "imageUrl": "/assets/products/pechay.jpg",
+          "tone": "#e8f5df",
+          "stock": 22,
+          "active": true
+        },
+        {
+          "id": "5f601754-carrot",
+          "name": "Carrots",
+          "category": "Vegetables",
+          "unit": "1 kg",
+          "price": 100,
+          "imageUrl": "/assets/products/carrot.jpg",
+          "tone": "#fff1df",
+          "stock": 26,
+          "active": true
+        },
+        {
+          "id": "5f601754-eggplant",
+          "name": "Eggplant",
+          "category": "Vegetables",
+          "unit": "1 kg",
+          "price": 85,
+          "imageUrl": "/assets/products/eggplant.jpg",
+          "tone": "#eeeaf7",
+          "stock": 30,
+          "active": true
+        },
+        {
+          "id": "5f601754-mango",
+          "name": "Sweet Mangoes",
+          "category": "Fruits",
+          "unit": "1 kg",
+          "price": 180,
+          "imageUrl": "/assets/products/mango.jpg",
+          "tone": "#fff4d9",
+          "stock": 34,
+          "active": true
+        },
+        {
+          "id": "5f601754-banana",
+          "name": "Saba Bananas",
+          "category": "Fruits",
+          "unit": "1 bunch",
+          "price": 85,
+          "imageUrl": "/assets/products/banana.jpg",
+          "tone": "#fdf8df",
+          "stock": 38,
           "active": true
         }
       ],
@@ -149,53 +288,10 @@
         ]
       }
     },
-    "salt": "c9290748f27eb308c9b02a391269f172",
-    "passwordHash": "5224975e27fa6d2e7ed6f32dcd84f36b2998d7508a806ce450873395cd1d9407",
-    "createdAt": "2026-10-27T14:46:58.046Z",
-    "passwordResetAt": "2026-11-08T11:57:28.955Z"
-  },
-  {
-    "id": "769633a0-a283-49b8-8e43-5e1a0e003e87",
-    "role": "driver",
-    "name": "Driver Tester",
-    "email": "driver@example.test",
-    "phone": "09191234567",
-    "approvalStatus": "approved",
-    "profile": {
-      "licenseNumber": "TEST-LICENSE-001",
-      "licenseType": "Professional",
-      "licenseExpiry": "2028-12-31",
-      "motorcycleType": "Motorcycle",
-      "plateNumber": "TEST-123",
-      "vehicleModel": "Honda Click 125",
-      "orcrNumber": "TEST-ORCR-001"
-    },
-    "salt": "5e4799c90a77177a4b9c97bffa969ea9",
-    "passwordHash": "f59584dcbb9c637fc83512966b15f9fd5b13041a2c6199f5efbc8efa6ff8a826",
-    "createdAt": "2026-10-27T14:46:58.110Z",
-    "passwordResetAt": "2026-11-08T11:57:29.005Z"
-  },
-  {
-    "id": "5f601754-c6da-4f0b-862c-152afcb6bf82",
-    "role": "seller",
-    "name": "Maria Santos",
-    "email": "seller2@example.test",
-    "phone": "09181234568",
-    "approvalStatus": "approved",
-    "profile": {
-      "storeName": "Santos Gulay at Prutas",
-      "storeLocation": "Tanauan City Public Market",
-      "registrationType": "DTI",
-      "registrationNumber": "TEST-DTI-002",
-      "tin": "TEST-TIN-002",
-      "businessPermit": "TEST-PERMIT-002",
-      "validIdType": "PhilSys ID",
-      "validIdNumber": "TEST-ID-SELLER-002"
-    },
-    "salt": "c7914d6a6c142d162409b56862e591b3",
-    "passwordHash": "8573aa0ec89832f7eaaab337549f789b7b6e326928051fc3178ed14b276ac44b",
+    "salt": "ad3d4b1accf1169390a97721fd6c7755",
+    "passwordHash": "b906058f2534a99efd957130b4b9caff0548dae267279a156e553990e00a981c",
     "createdAt": "2026-11-08T11:04:05.606Z",
-    "passwordResetAt": "2026-11-08T11:57:29.050Z"
+    "passwordResetAt": "2026-11-08T12:07:03.076Z"
   },
   {
     "id": "d78e2b1e-bc67-46e4-8398-53f504598788",
@@ -212,12 +308,62 @@
       "tin": "TEST-TIN-003",
       "businessPermit": "TEST-PERMIT-003",
       "validIdType": "Driver License",
-      "validIdNumber": "TEST-ID-SELLER-003"
+      "validIdNumber": "TEST-ID-SELLER-003",
+      "products": [
+        {
+          "id": "d78e2b1e-pork",
+          "name": "Pork Kasim",
+          "category": "Meat",
+          "unit": "1 kg",
+          "price": 330,
+          "imageUrl": "/assets/products/pork.jpg",
+          "tone": "#faecea",
+          "stock": 18,
+          "active": true
+        },
+        {
+          "id": "d78e2b1e-chicken",
+          "name": "Fresh Chicken",
+          "category": "Meat",
+          "unit": "1 kg",
+          "price": 210,
+          "imageUrl": "/assets/products/chicken.jpg",
+          "tone": "#fff3e5",
+          "stock": 22,
+          "active": true
+        },
+        {
+          "id": "d78e2b1e-eggs",
+          "name": "Farm Fresh Eggs",
+          "category": "Pantry",
+          "unit": "6 pieces",
+          "price": 60,
+          "imageUrl": "/assets/products/eggs.jpg",
+          "tone": "#fff1de",
+          "stock": 26,
+          "active": true
+        }
+      ],
+      "storeSettings": {
+        "mode": "manual",
+        "manualOpen": true,
+        "openTime": "06:00",
+        "closeTime": "18:00",
+        "days": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      }
     },
-    "salt": "96e276b4ca4cb1b268e04fc1e0977e14",
-    "passwordHash": "fce06336a1e8f42aceb83f1f973509408dcfa260dfe89763dd93564798318690",
+    "salt": "e8bc6238de4db6656fee5ecd9499e58f",
+    "passwordHash": "693744012038b17f2e1d2f3cbc991314dd28f9da9bb007bf51c6b955aba78a4b",
     "createdAt": "2026-11-08T11:04:05.651Z",
-    "passwordResetAt": "2026-11-08T11:57:29.094Z"
+    "passwordResetAt": "2026-11-08T12:07:03.120Z"
   },
   {
     "id": "69b96fc0-d644-40f3-bc38-2affc55c5508",
@@ -234,12 +380,73 @@
       "tin": "TEST-TIN-004",
       "businessPermit": "TEST-PERMIT-004",
       "validIdType": "PhilSys ID",
-      "validIdNumber": "TEST-ID-SELLER-004"
+      "validIdNumber": "TEST-ID-SELLER-004",
+      "products": [
+        {
+          "id": "69b96fc0-tilapia",
+          "name": "Fresh Tilapia",
+          "category": "Fish",
+          "unit": "1 kg",
+          "price": 160,
+          "imageUrl": "/assets/products/tilapia.jpg",
+          "tone": "#e6f3fc",
+          "stock": 18,
+          "active": true
+        },
+        {
+          "id": "69b96fc0-shrimp",
+          "name": "Fresh Shrimp",
+          "category": "Fish",
+          "unit": "500 g",
+          "price": 230,
+          "imageUrl": "/assets/products/shrimp.jpg",
+          "tone": "#fff0e9",
+          "stock": 22,
+          "active": true
+        },
+        {
+          "id": "69b96fc0-rice",
+          "name": "Premium Rice",
+          "category": "Pantry",
+          "unit": "1 kg",
+          "price": 58,
+          "imageUrl": "/assets/products/rice.jpg",
+          "tone": "#f2f1eb",
+          "stock": 26,
+          "active": true
+        },
+        {
+          "id": "69b96fc0-eggs",
+          "name": "Farm Fresh Eggs",
+          "category": "Pantry",
+          "unit": "6 pieces",
+          "price": 60,
+          "imageUrl": "/assets/products/eggs.jpg",
+          "tone": "#fff1de",
+          "stock": 30,
+          "active": true
+        }
+      ],
+      "storeSettings": {
+        "mode": "manual",
+        "manualOpen": true,
+        "openTime": "06:00",
+        "closeTime": "18:00",
+        "days": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      }
     },
-    "salt": "6c9ef252ebccbd99a1332f6012d9a6e9",
-    "passwordHash": "499cf15149e02071e1586f19e1adfa9d542d290e1f667bc38cb91c08098cef3c",
+    "salt": "c0a8d1db4490033f5f0801f33b5b20ea",
+    "passwordHash": "de743dddbfaae22e7e9be28564f64a59ed9115edc777a5c421c1149d898f5ef9",
     "createdAt": "2026-11-08T11:04:05.707Z",
-    "passwordResetAt": "2026-11-08T11:57:29.144Z"
+    "passwordResetAt": "2026-11-08T12:07:03.169Z"
   },
   {
     "id": "333fd494-5f75-42fe-970f-5382055e2f6e",
@@ -257,10 +464,10 @@
       "vehicleModel": "Yamaha Mio i125",
       "orcrNumber": "TEST-ORCR-002"
     },
-    "salt": "5f86fae0f419649cb09a777d6252f74e",
-    "passwordHash": "93622c337e7cb8f1ad7614d8da035237494f7e7210c85268bd90e294a529b4d2",
+    "salt": "f20a4b4625741a61346ca0fba0b6030d",
+    "passwordHash": "75935b3d0ccf1c83fdf97475eb41c4e69573f17b59f49588b2881d3420827961",
     "createdAt": "2026-11-08T11:04:05.756Z",
-    "passwordResetAt": "2026-11-08T11:57:29.187Z"
+    "passwordResetAt": "2026-11-08T12:07:03.213Z"
   },
   {
     "id": "83118e83-7ae6-4340-a44e-b54cfc3b4ca5",
@@ -278,10 +485,10 @@
       "vehicleModel": "Honda Beat",
       "orcrNumber": "TEST-ORCR-003"
     },
-    "salt": "f28d7f020d7ef4fe6efc3a7aec466c54",
-    "passwordHash": "49cb4a1b27e383878f3908045033922901c747462ab058c5553350891dee6642",
+    "salt": "da4ca360f07d935b662bd2249605eb35",
+    "passwordHash": "921b4cf1425a6a6eaf3453a0373c42f35c6849bf151c0736dc5c5beac7afe50b",
     "createdAt": "2026-11-08T11:04:05.810Z",
-    "passwordResetAt": "2026-11-08T11:57:29.233Z"
+    "passwordResetAt": "2026-11-08T12:07:03.258Z"
   },
   {
     "id": "4b71a6ee-36d1-49c5-9f5b-5c58484e053c",
@@ -299,9 +506,9 @@
       "vehicleModel": "Suzuki Burgman Street",
       "orcrNumber": "TEST-ORCR-004"
     },
-    "salt": "91471faf416f6ed8cda2ba35508e3a56",
-    "passwordHash": "beb8fbfd4caf00cca09129df52e748cce196922a81b458cebbc3aec05fec4640",
+    "salt": "5b237690ec7367a4a409f5b525cdd0bf",
+    "passwordHash": "02d31b252f294ca22a5ba621a0020ccfe4f1df36d132d86a348b310c506d5378",
     "createdAt": "2026-11-08T11:04:05.854Z",
-    "passwordResetAt": "2026-11-08T11:57:29.276Z"
+    "passwordResetAt": "2026-11-08T12:07:03.301Z"
   }
 ]

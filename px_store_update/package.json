@@ -2,5 +2,8 @@
   "name": "palengke-express",
   "version": "1.0.0",
   "private": true,
-  "scripts": {"start": "node server.js"}
+  "scripts": {
+    "fetch-photos": "node scripts/download-product-photos.js",
+    "start": "node server.js"
+  }
 }
