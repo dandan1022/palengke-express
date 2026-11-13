@@ -331,7 +331,7 @@ function modifyCart(id,diff){
 function addConfirmModal(){
   const product=state.products.find(p=>p.id===state.addConfirmProductId);
   if(!product)return '';
-  return `<div class="overlay add-confirm-overlay" data-close-add-confirm><div class="modal-card add-confirm-card" role="dialog" aria-modal="true" aria-label="Confirm add to cart" onclick="event.stopPropagation()">
+  return `<div class="overlay add-confirm-overlay" data-close-add-confirm><div class="modal-card add-confirm-card" role="dialog" aria-modal="true" aria-label="Confirm add to cart">
     <div class="modal-header"><div><div class="eyebrow">ADD TO CART?</div><h2 style="margin-top:5px">Confirm item</h2></div><button type="button" class="close-btn" data-close-add-confirm aria-label="Cancel">×</button></div>
     <div class="add-confirm-product"><div class="add-confirm-photo">${productThumb(product,'add-confirm-thumb')}</div><div class="add-confirm-copy"><small>${esc(product.category||'Product')}</small><h3>${esc(product.name)}</h3><p>${esc(product.unit||'')} · Stock ${Number(product.stock||0)}</p><strong>${money(product.price)}</strong></div></div>
     <div class="add-confirm-actions"><button type="button" class="btn btn-ghost" data-close-add-confirm>Cancel</button><button type="button" class="btn btn-primary" data-confirm-add="${product.id}">Add to Cart</button></div>
