@@ -64,3 +64,17 @@ body{background:#fff}
 .product-media img,.cart-thumb img,.order-item-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 
 .photo-unavailable{display:flex;align-items:center;justify-content:center;background:#f5f7f5!important}.photo-unavailable::after,.photo-unavailable-label{content:'Photo unavailable';font-size:12px;color:#718078;font-weight:700}
+
+
+/* Product add-to-cart confirmation */
+.add-confirm-card{max-width:520px;padding-bottom:22px}
+.add-confirm-product{display:grid;grid-template-columns:150px 1fr;gap:20px;align-items:center;padding:6px 0 22px}
+.add-confirm-photo{height:130px;border-radius:18px;overflow:hidden;background:#f3f7f4;display:flex;align-items:center;justify-content:center}
+.add-confirm-thumb{width:100%;height:100%;object-fit:cover;display:block}
+.add-confirm-copy small{display:block;color:#6d7b73;font-weight:700;margin-bottom:5px}
+.add-confirm-copy h3{margin:0 0 7px;font-size:22px;color:#18352a}
+.add-confirm-copy p{margin:0 0 12px;color:#718078}
+.add-confirm-copy strong{font-size:24px;color:#0c6b48}
+.add-confirm-actions{display:flex;gap:12px;justify-content:flex-end;border-top:1px solid #e6ede8;padding-top:18px}
+.add-confirm-actions .btn{min-width:140px}
+@media (max-width:560px){.add-confirm-card{width:calc(100% - 28px)}.add-confirm-product{grid-template-columns:110px 1fr;gap:14px}.add-confirm-photo{height:105px}.add-confirm-actions{display:grid;grid-template-columns:1fr 1fr}.add-confirm-actions .btn{min-width:0}}

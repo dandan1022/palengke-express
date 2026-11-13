@@ -14,7 +14,7 @@ const state = {
   deliveryFee:40, cart:JSON.parse(localStorage.getItem('px-cart') || '{}'),
   customerId:session?.user?.id || '',
   customerName:session?.user?.name || '',
-  accountMenuOpen:false, accountModalOpen:false,
+  accountMenuOpen:false, accountModalOpen:false, addConfirmProductId:null,
   selectedOrderId:null, modalOpen:false, draftLocation:null, draftName:'', draftAddress:'', draftNotes:'',
   online:false, hasLoaded:false, signature:'', map:null, mapEpoch:0, riderMarker:null, riderAccuracyCircle:null, routeCoords:[], liveRouteLayer:null, lastRouteRefreshAt:0, lastRouteOrigin:null, checkoutMap:null, checkoutPin:null, checkoutAccuracyCircle:null,
   demoTimer:null, demoOrderId:null, gpsWatchId:null, gpsOrderId:null, gpsEnabled:false, gpsStarting:false, lastGpsSentAt:0, lastGpsSentPos:null, users:[]
@@ -328,6 +328,15 @@ function modifyCart(id,diff){
   if(state.modalOpen) renderModal(); else render();
   if(diff>0) toast(`${product.name} added to your cart`);
 }
+function addConfirmModal(){
+  const product=state.products.find(p=>p.id===state.addConfirmProductId);
+  if(!product)return '';
+  return `<div class="overlay add-confirm-overlay" data-close-add-confirm><div class="modal-card add-confirm-card" role="dialog" aria-modal="true" aria-label="Confirm add to cart" onclick="event.stopPropagation()">
+    <div class="modal-header"><div><div class="eyebrow">ADD TO CART?</div><h2 style="margin-top:5px">Confirm item</h2></div><button type="button" class="close-btn" data-close-add-confirm aria-label="Cancel">×</button></div>
+    <div class="add-confirm-product"><div class="add-confirm-photo">${productThumb(product,'add-confirm-thumb')}</div><div class="add-confirm-copy"><small>${esc(product.category||'Product')}</small><h3>${esc(product.name)}</h3><p>${esc(product.unit||'')} · Stock ${Number(product.stock||0)}</p><strong>${money(product.price)}</strong></div></div>
+    <div class="add-confirm-actions"><button type="button" class="btn btn-ghost" data-close-add-confirm>Cancel</button><button type="button" class="btn btn-primary" data-confirm-add="${product.id}">Add to Cart</button></div>
+  </div></div>`;
+}
 function cartModal(){
   const cart=state.products.filter(p=>state.cart[p.id]>0);
   return `<div class="overlay" id="cart-overlay"><div class="modal-card" role="dialog" aria-modal="true" aria-label="Your shopping cart">
@@ -359,8 +368,8 @@ function accountModal(){
   return `<div class="overlay account-overlay" data-close-account-modal><div class="modal-card account-profile-card" role="dialog" aria-modal="true" aria-label="Account details"><div class="modal-header"><div><div class="eyebrow">MY ACCOUNT</div><h2 style="margin-top:5px">Account details</h2></div><button type="button" class="close-btn" data-close-account-modal aria-label="Close account details">×</button></div><div class="account-profile-head"><div class="account-profile-avatar">${initial}</div><div><h3>${esc(u.name||'User')}</h3><p>${esc((role||'user').charAt(0).toUpperCase()+(role||'user').slice(1))}</p></div></div><div class="account-profile-details"><div class="detail-row"><span>Email</span><strong>${esc(u.email||'—')}</strong></div><div class="detail-row"><span>Phone</span><strong>${esc(u.phone||'—')}</strong></div>${details}</div></div></div>`;
 }
 function renderModal(){
-  $('#modal-root').innerHTML=state.accountModalOpen ? accountModal() : (state.modalOpen ? cartModal() : '');
-  if(state.modalOpen&&!state.accountModalOpen)setTimeout(initCheckoutMap,0);
+  $('#modal-root').innerHTML=state.accountModalOpen ? accountModal() : (state.addConfirmProductId ? addConfirmModal() : (state.modalOpen ? cartModal() : ''));
+  if(state.modalOpen&&!state.accountModalOpen&&!state.addConfirmProductId)setTimeout(initCheckoutMap,0);
 }
 function openCart(){
   state.modalOpen=true;
@@ -777,7 +786,10 @@ async function placeOrder(event){
 }
 document.addEventListener('click',async event=>{
   if(event.target.matches('[data-close-account-modal]')){state.accountModalOpen=false;render();return;}
+  if(event.target.matches('[data-close-add-confirm]')){state.addConfirmProductId=null;renderModal();return;}
   const element=event.target.closest('button');if(!element)return;
+  if(element.hasAttribute('data-close-add-confirm')){state.addConfirmProductId=null;renderModal();return;}
+  if(element.dataset.confirmAdd){const id=element.dataset.confirmAdd;state.addConfirmProductId=null;modifyCart(id,1);return;}
   if(element.dataset.role){switchRole(element.dataset.role);return;}
   if(element.hasAttribute('data-account-menu')){state.accountMenuOpen=!state.accountMenuOpen;updateCounters();return;}
   if(element.dataset.accountAction){
@@ -843,7 +855,7 @@ document.addEventListener('click',async event=>{
   }
   if(element.dataset.filter){state.filter=element.dataset.filter;render();return;}
   if(element.dataset.order){state.selectedOrderId=element.dataset.order;render();return;}
-  if(element.dataset.add){modifyCart(element.dataset.add,1);return;}
+  if(element.dataset.add){state.addConfirmProductId=element.dataset.add;renderModal();return;}
   if(element.hasAttribute('data-open-cart')){openCart();return;}
   if(element.hasAttribute('data-close-cart')){closeCart();return;}
   if(element.dataset.adjust){captureDraft();modifyCart(element.dataset.product,Number(element.dataset.adjust));return;}
